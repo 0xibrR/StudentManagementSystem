@@ -40,7 +40,7 @@
 
                     <TableColumn fx:id="colName"
                                  text="Student Name"
-                                 prefWidth="180"/>
+                                 prefWidth="170"/>
 
                     <TableColumn fx:id="colYear"
                                  text="Birth Year"
@@ -48,11 +48,15 @@
 
                     <TableColumn fx:id="colPhone"
                                  text="Phone"
-                                 prefWidth="150"/>
+                                 prefWidth="140"/>
+
+                    <TableColumn fx:id="colEnrollmentDate"
+                                 text="Registration Date"
+                                 prefWidth="140"/>
 
                     <TableColumn fx:id="colNotes"
                                  text="Notes"
-                                 prefWidth="250"/>
+                                 prefWidth="220"/>
 
                 </columns>
 

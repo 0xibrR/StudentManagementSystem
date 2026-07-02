@@ -23,14 +23,15 @@ public class CreateTable {
                 """;
 
             String studentsTable = """
-        CREATE TABLE IF NOT EXISTS students (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            yearOfBirth INT NOT NULL,
-            phone VARCHAR(20),
-            notes TEXT
-        );
-        """;
+    CREATE TABLE IF NOT EXISTS students (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        yearOfBirth INT NOT NULL,
+        phone VARCHAR(20),
+        enrollment_date DATE,
+        notes TEXT
+    );
+    """;
 
             String paymentsTable = """
         CREATE TABLE IF NOT EXISTS payments (

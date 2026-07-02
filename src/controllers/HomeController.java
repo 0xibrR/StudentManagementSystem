@@ -35,6 +35,9 @@ public class HomeController {
     private TableColumn<Student, String> colPhone;
 
     @FXML
+    private TableColumn<Student, Date> colEnrollmentDate;
+
+    @FXML
     private TableColumn<Student, String> colNotes;
 
     @FXML
@@ -49,6 +52,7 @@ public class HomeController {
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colYear.setCellValueFactory(new PropertyValueFactory<>("yearOfBirth"));
         colPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
+        colEnrollmentDate.setCellValueFactory(new PropertyValueFactory<>("enrollmentDate"));
         colNotes.setCellValueFactory(new PropertyValueFactory<>("notes"));
 
         lblWelcome.setText("Welcome, " + Session.getFullName() + "!");
@@ -77,6 +81,7 @@ public class HomeController {
                         rs.getString("name"),
                         rs.getInt("yearOfBirth"),
                         rs.getString("phone"),
+                        rs.getDate("enrollment_date"),
                         rs.getString("notes")
                 );
 
@@ -124,6 +129,7 @@ public class HomeController {
                         rs.getString("name"),
                         rs.getInt("yearOfBirth"),
                         rs.getString("phone"),
+                        rs.getDate("enrollment_date"),
                         rs.getString("notes")
                 );
 

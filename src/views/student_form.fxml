@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.DatePicker?>
 
 <AnchorPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.StudentFormController"
@@ -11,10 +12,11 @@
     <children>
 
         <Label text="Student Form"
-               layoutX="130"
+               layoutX="120"
                layoutY="20"
                style="-fx-font-size:22px; -fx-font-weight:bold;"/>
 
+        <!-- Name -->
         <Label text="Name:"
                layoutX="40"
                layoutY="90"/>
@@ -24,6 +26,7 @@
                    layoutY="85"
                    prefWidth="220"/>
 
+        <!-- Birth Year -->
         <Label text="Year of Birth:"
                layoutX="40"
                layoutY="135"/>
@@ -33,6 +36,7 @@
                    layoutY="130"
                    prefWidth="220"/>
 
+        <!-- Phone -->
         <Label text="Phone:"
                layoutX="40"
                layoutY="180"/>
@@ -42,24 +46,38 @@
                    layoutY="175"
                    prefWidth="220"/>
 
-        <Label text="Notes:"
+        <!-- Enrollment Date -->
+        <Label text="Enrollment Date:"
                layoutX="40"
                layoutY="225"/>
 
+        <DatePicker fx:id="dpEnrollmentDate"
+                    layoutX="150"
+                    layoutY="220"
+                    prefWidth="220"/>
+
+        <!-- Notes -->
+        <Label text="Notes:"
+               layoutX="40"
+               layoutY="275"/>
+
         <TextArea fx:id="txtNotes"
                   layoutX="150"
-                  layoutY="220"
+                  layoutY="270"
                   prefWidth="220"
                   prefHeight="70"/>
 
+        <!-- Buttons -->
         <Button text="Save"
                 layoutX="150"
-                layoutY="315"
+                layoutY="360"
+                prefWidth="80"
                 onAction="#handleSave"/>
 
         <Button text="Cancel"
                 layoutX="240"
-                layoutY="315"
+                layoutY="360"
+                prefWidth="80"
                 onAction="#handleCancel"/>
 
     </children>
