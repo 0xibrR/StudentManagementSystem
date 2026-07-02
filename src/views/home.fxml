@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.HomeController" prefWidth="800" prefHeight="500">
+
+    <!-- العنوان مع اسم المستخدم -->
+    <top>
+        <HBox spacing="20" alignment="CENTER_LEFT" style="-fx-padding: 10;">
+            <Label text="Student Management - Home" style="-fx-font-size: 22px; -fx-font-weight: bold;" />
+            <Label fx:id="lblWelcome" text="Welcome!" style="-fx-font-size: 18px; -fx-text-fill: green;" />
+        </HBox>
+    </top>
+
+    <!-- الجدول -->
+    <center>
+
+        <VBox spacing="10" style="-fx-padding: 10;">
+
+            <HBox spacing="10" alignment="CENTER_LEFT">
+
+                <Label text="🔍 Search Student:"
+                       style="-fx-font-size:14px;
+                          -fx-font-weight:bold;"/>
+
+                <TextField fx:id="txtSearch"
+                           promptText="Search by Name, Phone or Birth Year..."
+                           prefWidth="300"/>
+
+            </HBox>
+
+            <TableView fx:id="tableStudents">
+
+                <columns>
+
+                    <TableColumn fx:id="colId"
+                                 text="ID"
+                                 prefWidth="60"/>
+
+                    <TableColumn fx:id="colName"
+                                 text="Student Name"
+                                 prefWidth="180"/>
+
+                    <TableColumn fx:id="colYear"
+                                 text="Birth Year"
+                                 prefWidth="100"/>
+
+                    <TableColumn fx:id="colPhone"
+                                 text="Phone"
+                                 prefWidth="150"/>
+
+                    <TableColumn fx:id="colNotes"
+                                 text="Notes"
+                                 prefWidth="250"/>
+
+                </columns>
+
+            </TableView>
+
+        </VBox>
+
+    </center>
+    <!-- الأزرار -->
+    <bottom>
+        <HBox spacing="10"
+              style="-fx-padding: 10;"
+              alignment="CENTER">
+
+            <Button text="➕ Add Student"
+                    onAction="#handleAdd"/>
+
+            <Button text="💳 Payments"
+                    onAction="#handlePayments"/>
+
+            <Button text="✏ Edit"
+                    onAction="#handleEdit"/>
+
+            <Button text="🗑 Delete"
+                    onAction="#handleDelete"/>
+
+            <Button text="🔄 Refresh"
+                    onAction="#handleRefresh"/>
+
+            <Button text="🚪 Logout"
+                    onAction="#handleLogout"/>
+
+        </HBox>
+    </bottom>
+
+</BorderPane>

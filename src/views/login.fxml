@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.LoginController"
+            prefWidth="350" prefHeight="400" styleClass="form-container" stylesheets="@../css/style.css">
+
+    <VBox alignment="CENTER" spacing="15" layoutX="25" layoutY="40" prefWidth="300">
+
+        <HBox spacing="20" alignment="CENTER">
+            <Label text="SIGN IN" styleClass="tab-label-selected"/>
+            <Label text="SIGN UP" styleClass="tab-label" onMouseClicked="#goToSignUp"/>
+        </HBox>
+
+        <TextField fx:id="txtUsername" promptText="Username" styleClass="input-field"/>
+        <PasswordField fx:id="txtPassword" promptText="Password" styleClass="input-field"/>
+
+        <Button text="LOGIN" styleClass="primary-button" onAction="#handleLogin"/>
+
+        <Label text="Don't have an account? Sign up" styleClass="link-label" onMouseClicked="#goToSignUp"/>
+    </VBox>
+</AnchorPane>

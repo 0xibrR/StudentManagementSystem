@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/23.0.1"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.PaymentHistoryController"
+            prefWidth="950"
+            prefHeight="600">
+
+    <top>
+
+        <VBox spacing="10"
+              BorderPane.alignment="CENTER">
+
+            <padding>
+                <Insets top="15" right="15" bottom="10" left="15"/>
+            </padding>
+
+            <Label text="Payment History"
+                   style="-fx-font-size:24px;
+                          -fx-font-weight:bold;"/>
+
+            <HBox spacing="10">
+
+                <Label text="Student :"
+                       style="-fx-font-weight:bold;"/>
+
+                <Label fx:id="lblStudent"
+                       text="Student Name"
+                       style="-fx-font-size:15px;"/>
+
+            </HBox>
+
+        </VBox>
+
+    </top>
+
+    <center>
+
+        <TableView fx:id="tablePayments">
+
+            <columns>
+
+                <TableColumn fx:id="colDate"
+                             text="Date"
+                             prefWidth="120"/>
+
+                <TableColumn fx:id="colMethod"
+                             text="Method"
+                             prefWidth="100"/>
+
+                <TableColumn fx:id="colAmountDue"
+                             text="Amount Due"
+                             prefWidth="120"/>
+
+                <TableColumn fx:id="colCash"
+                             text="Cash"
+                             prefWidth="100"/>
+
+                <TableColumn fx:id="colBank"
+                             text="Bank"
+                             prefWidth="100"/>
+
+                <TableColumn fx:id="colPaid"
+                             text="Paid"
+                             prefWidth="100"/>
+
+                <TableColumn fx:id="colRemaining"
+                             text="Remaining"
+                             prefWidth="110"/>
+
+                <TableColumn fx:id="colNotes"
+                             text="Notes"
+                             prefWidth="250"/>
+
+            </columns>
+
+        </TableView>
+
+    </center>
+
+    <bottom>
+
+        <HBox spacing="15"
+              alignment="CENTER">
+
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+
+            <Button text="➕ Add Payment"
+                    onAction="#handleAddPayment"/>
+
+            <Button text="✏ Edit"
+                    onAction="#handleEdit"/>
+
+            <Button text="🗑 Delete"
+                    onAction="#handleDelete"/>
+
+            <Button text="❌ Close"
+                    onAction="#handleClose"/>
+
+        </HBox>
+
+    </bottom>
+
+</BorderPane>

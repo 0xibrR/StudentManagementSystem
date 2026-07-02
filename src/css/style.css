@@ -1,0 +1,39 @@
+.form-container {
+    -fx-background-color: #2f2f2f;
+    -fx-background-radius: 15;
+}
+
+.input-field {
+    -fx-background-radius: 20;
+    -fx-padding: 8 15;
+    -fx-font-size: 14px;
+    -fx-background-color: #fff;
+}
+
+.primary-button {
+    -fx-background-color: #28a745;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20;
+    -fx-padding: 8 20;
+}
+
+.primary-button:hover {
+    -fx-background-color: #218838;
+}
+
+.tab-label {
+    -fx-text-fill: #ccc;
+    -fx-font-size: 14px;
+}
+
+.tab-label-selected {
+    -fx-text-fill: #28a745;
+    -fx-font-weight: bold;
+    -fx-underline: true;
+}
+
+.link-label {
+    -fx-text-fill: #bbb;
+    -fx-font-size: 12px;
+}

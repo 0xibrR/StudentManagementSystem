@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.StudentFormController"
+            prefWidth="420"
+            prefHeight="380">
+
+    <children>
+
+        <Label text="Student Form"
+               layoutX="130"
+               layoutY="20"
+               style="-fx-font-size:22px; -fx-font-weight:bold;"/>
+
+        <Label text="Name:"
+               layoutX="40"
+               layoutY="90"/>
+
+        <TextField fx:id="txtName"
+                   layoutX="150"
+                   layoutY="85"
+                   prefWidth="220"/>
+
+        <Label text="Year of Birth:"
+               layoutX="40"
+               layoutY="135"/>
+
+        <TextField fx:id="txtYear"
+                   layoutX="150"
+                   layoutY="130"
+                   prefWidth="220"/>
+
+        <Label text="Phone:"
+               layoutX="40"
+               layoutY="180"/>
+
+        <TextField fx:id="txtPhone"
+                   layoutX="150"
+                   layoutY="175"
+                   prefWidth="220"/>
+
+        <Label text="Notes:"
+               layoutX="40"
+               layoutY="225"/>
+
+        <TextArea fx:id="txtNotes"
+                  layoutX="150"
+                  layoutY="220"
+                  prefWidth="220"
+                  prefHeight="70"/>
+
+        <Button text="Save"
+                layoutX="150"
+                layoutY="315"
+                onAction="#handleSave"/>
+
+        <Button text="Cancel"
+                layoutX="240"
+                layoutY="315"
+                onAction="#handleCancel"/>
+
+    </children>
+
+</AnchorPane>
