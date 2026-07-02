@@ -47,7 +47,7 @@
                    prefWidth="220"/>
 
         <!-- Enrollment Date -->
-        <Label text="Enrollment Date:"
+        <Label text="Registration Date:"
                layoutX="40"
                layoutY="225"/>
 
