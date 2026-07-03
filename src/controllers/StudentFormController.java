@@ -7,6 +7,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import models.Session;
 import models.Student;
 
 import java.sql.Connection;
@@ -26,6 +27,7 @@ public class StudentFormController {
 
     @FXML
     private DatePicker dpEnrollmentDate;
+
     @FXML
     private TextArea txtNotes;
 
@@ -40,9 +42,7 @@ public class StudentFormController {
         if (student != null) {
 
             txtName.setText(student.getName());
-
             txtYear.setText(String.valueOf(student.getYearOfBirth()));
-
             txtPhone.setText(student.getPhone());
 
             if (student.getEnrollmentDate() != null) {
@@ -90,35 +90,39 @@ public class StudentFormController {
             if (student == null) {
 
                 String sql = """
-                    INSERT INTO students
-                    (name,
-                     yearOfBirth,
-                     phone,
-                     enrollment_date,
-                     notes)
-                    VALUES (?, ?, ?, ?, ?)
-                    """;
+                        INSERT INTO students
+                        (
+                            user_id,
+                            name,
+                            yearOfBirth,
+                            phone,
+                            enrollment_date,
+                            notes
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        """;
 
                 stmt = conn.prepareStatement(sql);
 
-                stmt.setString(1, name);
-                stmt.setInt(2, year);
-                stmt.setString(3, phone);
-                stmt.setDate(4, enrollmentDate);
-                stmt.setString(5, notes);
+                stmt.setInt(1, Session.getUserId());
+                stmt.setString(2, name);
+                stmt.setInt(3, year);
+                stmt.setString(4, phone);
+                stmt.setDate(5, enrollmentDate);
+                stmt.setString(6, notes);
 
             } else {
 
                 String sql = """
-                    UPDATE students
-                    SET
-                        name=?,
-                        yearOfBirth=?,
-                        phone=?,
-                        enrollment_date=?,
-                        notes=?
-                    WHERE id=?
-                    """;
+                        UPDATE students
+                        SET
+                            name=?,
+                            yearOfBirth=?,
+                            phone=?,
+                            enrollment_date=?,
+                            notes=?
+                        WHERE id=?
+                        """;
 
                 stmt = conn.prepareStatement(sql);
 
@@ -157,7 +161,9 @@ public class StudentFormController {
 
     @FXML
     private void handleCancel() {
+
         closeWindow();
+
     }
 
     private void closeWindow() {

@@ -68,57 +68,17 @@ public class HomeController {
 
         studentsList = FXCollections.observableArrayList();
 
-        String sql = "SELECT * FROM students";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-
-                Student student = new Student(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getInt("yearOfBirth"),
-                        rs.getString("phone"),
-                        rs.getDate("enrollment_date"),
-                        rs.getString("notes")
-                );
-
-                studentsList.add(student);
-
-            }
-
-            tableStudents.setItems(studentsList);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    private void searchStudents(String keyword) {
-
-        studentsList = FXCollections.observableArrayList();
-
         String sql = """
             SELECT *
             FROM students
-            WHERE
-                name LIKE ?
-                OR phone LIKE ?
-                OR CAST(yearOfBirth AS CHAR) LIKE ?
+            WHERE user_id = ?
             ORDER BY id
             """;
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            String search = "%" + keyword + "%";
-
-            ps.setString(1, search);
-            ps.setString(2, search);
-            ps.setString(3, search);
+            ps.setInt(1, Session.getUserId());
 
             ResultSet rs = ps.executeQuery();
 
@@ -147,6 +107,58 @@ public class HomeController {
 
     }
 
+    private void searchStudents(String keyword) {
+
+        studentsList = FXCollections.observableArrayList();
+
+        String sql = """
+            SELECT *
+            FROM students
+            WHERE user_id = ?
+            AND (
+                name LIKE ?
+                OR phone LIKE ?
+                OR CAST(yearOfBirth AS CHAR) LIKE ?
+            )
+            ORDER BY id
+            """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String search = "%" + keyword + "%";
+
+            ps.setInt(1, Session.getUserId());
+            ps.setString(2, search);
+            ps.setString(3, search);
+            ps.setString(4, search);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                Student student = new Student(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("yearOfBirth"),
+                        rs.getString("phone"),
+                        rs.getDate("enrollment_date"),
+                        rs.getString("notes")
+                );
+
+                studentsList.add(student);
+
+            }
+
+            tableStudents.setItems(studentsList);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+    }
     @FXML
     private void handleAdd() {
         openStudentForm(null);

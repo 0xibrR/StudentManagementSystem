@@ -46,6 +46,7 @@ public class LoginController {
 
             if (rs.next()) {
 
+                Session.setUserId(rs.getInt("id"));
                 Session.setFullName(rs.getString("full_name"));
 
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/home.fxml"));
