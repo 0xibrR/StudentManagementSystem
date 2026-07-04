@@ -113,7 +113,7 @@ public class PaymentController {
 
             txtRemaining.setText(String.format("%.2f", remaining));
 
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
 
             txtPaid.clear();
             txtRemaining.clear();
@@ -273,6 +273,7 @@ public class PaymentController {
                         total_amount=?,
                         notes=?
                     WHERE id=?
+                    AND student_id=?
                     """;
 
                 ps = con.prepareStatement(sql);
@@ -283,6 +284,7 @@ public class PaymentController {
                 ps.setDouble(4, total);
                 ps.setString(5, txtNotes.getText());
                 ps.setInt(6, payment.getId());
+                ps.setInt(7, student.getId());
 
             }
 

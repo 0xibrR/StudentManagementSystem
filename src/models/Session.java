@@ -3,7 +3,7 @@ package models;
 public class Session {
 
     private static int userId;
-    private static String currentUsername;
+    private static String fullName;
 
     public static void setUserId(int id) {
         userId = id;
@@ -13,17 +13,17 @@ public class Session {
         return userId;
     }
 
-    public static void setFullName(String username) {
-        currentUsername = username;
+    public static void setFullName(String name) {
+        fullName = name;
     }
 
     public static String getFullName() {
-        return currentUsername;
+        return fullName;
     }
 
     public static void clear() {
         userId = 0;
-        currentUsername = null;
+        fullName = null;
     }
 
 }

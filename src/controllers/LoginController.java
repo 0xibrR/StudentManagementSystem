@@ -30,11 +30,11 @@ public class LoginController {
         String password = txtPassword.getText().trim();
 
         if (username.isEmpty() || password.isEmpty()) {
-            showAlert("Error", "Please enter username and password.");
+            showError("Error", "Please enter username and password.");
             return;
         }
 
-        String sql = "SELECT * FROM users WHERE username=? AND password=?";
+        String sql = "SELECT id, full_name FROM users WHERE username=? AND password=?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -57,13 +57,13 @@ public class LoginController {
 
             } else {
 
-                showAlert("Login Failed", "Invalid username or password.");
+                showError("Login Failed", "Invalid username or password.");
 
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Database Error", e.getMessage());
+            showError("Database Error", e.getMessage());
         }
     }
 
@@ -84,9 +84,9 @@ public class LoginController {
 
     }
 
-    private void showAlert(String title, String message) {
+    private void showError(String title, String message) {
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        Alert alert = new Alert(Alert.AlertType.ERROR);
 
         alert.setTitle(title);
         alert.setHeaderText(null);

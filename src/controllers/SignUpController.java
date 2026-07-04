@@ -36,6 +36,7 @@ public class SignUpController {
         String password = txtPassword.getText().trim();
         String confirmPassword = txtConfirmPassword.getText().trim();
 
+        // Validate Empty Fields
         if (fullName.isEmpty() || username.isEmpty()
                 || password.isEmpty() || confirmPassword.isEmpty()) {
 
@@ -43,6 +44,28 @@ public class SignUpController {
             return;
         }
 
+        // Validate Full Name
+        if (fullName.length() < 2) {
+
+            showAlert("Error", "Full name must be at least 2 characters.");
+            return;
+        }
+
+        // Validate Username
+        if (username.length() < 4) {
+
+            showAlert("Error", "Username must be at least 4 characters.");
+            return;
+        }
+
+        // Validate Password
+        if (password.length() < 6) {
+
+            showAlert("Error", "Password must be at least 6 characters.");
+            return;
+        }
+
+        // Confirm Password
         if (!password.equals(confirmPassword)) {
 
             showAlert("Error", "Passwords do not match.");
@@ -51,31 +74,39 @@ public class SignUpController {
 
         try (Connection conn = DatabaseConnection.getConnection()) {
 
-            // التحقق من وجود اسم المستخدم
-            String checkSql = "SELECT id FROM users WHERE username = ?";
+            // Check Username
+            String checkSql = "SELECT 1 FROM users WHERE username = ?";
 
-            PreparedStatement checkStmt = conn.prepareStatement(checkSql);
-            checkStmt.setString(1, username);
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
 
-            ResultSet rs = checkStmt.executeQuery();
+                checkStmt.setString(1, username);
 
-            if (rs.next()) {
+                try (ResultSet rs = checkStmt.executeQuery()) {
 
-                showAlert("Error", "Username already exists.");
-                return;
+                    if (rs.next()) {
+
+                        showAlert("Error", "Username already exists.");
+                        return;
+
+                    }
+
+                }
+
             }
 
-            // إنشاء الحساب
+            // Create Account
             String insertSql =
                     "INSERT INTO users(full_name, username, password) VALUES(?,?,?)";
 
-            PreparedStatement stmt = conn.prepareStatement(insertSql);
+            try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
 
-            stmt.setString(1, fullName);
-            stmt.setString(2, username);
-            stmt.setString(3, password);
+                stmt.setString(1, fullName);
+                stmt.setString(2, username);
+                stmt.setString(3, password);
 
-            stmt.executeUpdate();
+                stmt.executeUpdate();
+
+            }
 
             showAlert("Success", "Account created successfully.");
 
@@ -84,6 +115,7 @@ public class SignUpController {
         } catch (Exception e) {
 
             e.printStackTrace();
+
             showAlert("Database Error", e.getMessage());
 
         }

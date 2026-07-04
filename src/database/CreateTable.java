@@ -13,6 +13,10 @@ public class CreateTable {
 
             Statement st = con.createStatement();
 
+            // ==========================
+            // Users Table
+            // ==========================
+
             String usersTable = """
                 CREATE TABLE IF NOT EXISTS users (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -21,6 +25,10 @@ public class CreateTable {
                     password VARCHAR(255) NOT NULL
                 );
                 """;
+
+            // ==========================
+            // Students Table
+            // ==========================
 
             String studentsTable = """
                 CREATE TABLE IF NOT EXISTS students (
@@ -32,12 +40,18 @@ public class CreateTable {
                     enrollment_date DATE,
                     notes TEXT,
 
+                    INDEX idx_user (user_id),
+
                     CONSTRAINT fk_students_user
                         FOREIGN KEY (user_id)
                         REFERENCES users(id)
                         ON DELETE CASCADE
                 );
                 """;
+
+            // ==========================
+            // Payments Table
+            // ==========================
 
             String paymentsTable = """
                 CREATE TABLE IF NOT EXISTS payments (
@@ -49,6 +63,8 @@ public class CreateTable {
                     total_amount DOUBLE NOT NULL,
                     payment_date DATE NOT NULL,
                     notes TEXT,
+
+                    INDEX idx_student (student_id),
 
                     CONSTRAINT fk_payments_student
                         FOREIGN KEY (student_id)

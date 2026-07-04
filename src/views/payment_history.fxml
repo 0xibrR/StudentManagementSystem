@@ -23,13 +23,28 @@
                    style="-fx-font-size:24px;
                           -fx-font-weight:bold;"/>
 
-            <HBox spacing="10">
+            <HBox spacing="20"
+                  alignment="CENTER_LEFT">
 
-                <Label text="Student :"
-                       style="-fx-font-weight:bold;"/>
+                <Label text="👤 Student:"
+                       style="-fx-font-weight:bold;
+                  -fx-font-size:15px;"/>
 
                 <Label fx:id="lblStudent"
-                       text="Student Name"
+                       style="-fx-font-size:15px;"/>
+
+                <Label text="📞 Phone:"
+                       style="-fx-font-weight:bold;
+                  -fx-font-size:15px;"/>
+
+                <Label fx:id="lblPhone"
+                       style="-fx-font-size:15px;"/>
+
+                <Label text="📅 Registration:"
+                       style="-fx-font-weight:bold;
+                  -fx-font-size:15px;"/>
+
+                <Label fx:id="lblRegistrationDate"
                        style="-fx-font-size:15px;"/>
 
             </HBox>
@@ -40,45 +55,103 @@
 
     <center>
 
-        <TableView fx:id="tablePayments">
+        <VBox spacing="12" style="-fx-padding: 0 15 15 15;">
 
-            <columns>
+            <HBox spacing="15" alignment="CENTER">
 
-                <TableColumn fx:id="colDate"
-                             text="Date"
-                             prefWidth="120"/>
 
-                <TableColumn fx:id="colMethod"
-                             text="Method"
-                             prefWidth="100"/>
+                <VBox alignment="CENTER" spacing="5" prefWidth="150"
+                      style="-fx-background-color:#4CAF50; -fx-background-radius:10; -fx-padding:10;">
+                    <Label text="Payments" style="-fx-text-fill:white; -fx-font-weight:bold;"/>
+                    <Label fx:id="lblPaymentsCount" text="0"
+                           style="-fx-text-fill:white; -fx-font-size:24px; -fx-font-weight:bold;"/>
+                </VBox>
 
-                <TableColumn fx:id="colAmountDue"
-                             text="Amount Due"
-                             prefWidth="120"/>
 
-                <TableColumn fx:id="colCash"
-                             text="Cash"
-                             prefWidth="100"/>
+                <VBox alignment="CENTER" spacing="5" prefWidth="150"
+                      style="-fx-background-color:#2196F3; -fx-background-radius:10; -fx-padding:10;">
+                    <Label text="Cash" style="-fx-text-fill:white; -fx-font-weight:bold;"/>
+                    <Label fx:id="lblCashTotal" text="0.00 ₪"
+                           style="-fx-text-fill:white; -fx-font-size:20px; -fx-font-weight:bold;"/>
+                </VBox>
 
-                <TableColumn fx:id="colBank"
-                             text="Bank"
-                             prefWidth="100"/>
 
-                <TableColumn fx:id="colPaid"
-                             text="Paid"
-                             prefWidth="100"/>
+                <VBox alignment="CENTER" spacing="5" prefWidth="150"
+                      style="-fx-background-color:#9C27B0; -fx-background-radius:10; -fx-padding:10;">
+                    <Label text="Bank" style="-fx-text-fill:white; -fx-font-weight:bold;"/>
+                    <Label fx:id="lblBankTotal" text="0.00 ₪"
+                           style="-fx-text-fill:white; -fx-font-size:20px; -fx-font-weight:bold;"/>
+                </VBox>
 
-                <TableColumn fx:id="colRemaining"
-                             text="Remaining"
-                             prefWidth="110"/>
 
-                <TableColumn fx:id="colNotes"
-                             text="Notes"
-                             prefWidth="250"/>
+                <VBox alignment="CENTER" spacing="5" prefWidth="150"
+                      style="-fx-background-color:#009688; -fx-background-radius:10; -fx-padding:10;">
+                    <Label text="Total Paid" style="-fx-text-fill:white; -fx-font-weight:bold;"/>
+                    <Label fx:id="lblTotalPaid" text="0.00 ₪"
+                           style="-fx-text-fill:white; -fx-font-size:20px; -fx-font-weight:bold;"/>
+                </VBox>
 
-            </columns>
 
-        </TableView>
+                <VBox fx:id="remainingCard" alignment="CENTER" spacing="5" prefWidth="150"
+                      style="-fx-background-color:#FF9800;
+             -fx-background-radius:10;
+             -fx-padding:10;">
+
+                    <Label text="Remaining"
+                           style="-fx-text-fill:white;
+                  -fx-font-weight:bold;"/>
+
+                    <Label fx:id="lblRemainingTotal"
+                           text="0.00 ₪"
+                           style="-fx-text-fill:white;
+                  -fx-font-size:20px;
+                  -fx-font-weight:bold;"/>
+
+                </VBox>
+
+            </HBox>
+
+            <TableView fx:id="tablePayments">
+
+                <columns>
+
+                    <TableColumn fx:id="colDate"
+                                 text="Date"
+                                 prefWidth="120"/>
+
+                    <TableColumn fx:id="colMethod"
+                                 text="Method"
+                                 prefWidth="100"/>
+
+                    <TableColumn fx:id="colAmountDue"
+                                 text="Amount Due"
+                                 prefWidth="120"/>
+
+                    <TableColumn fx:id="colCash"
+                                 text="Cash"
+                                 prefWidth="100"/>
+
+                    <TableColumn fx:id="colBank"
+                                 text="Bank"
+                                 prefWidth="100"/>
+
+                    <TableColumn fx:id="colPaid"
+                                 text="Paid"
+                                 prefWidth="100"/>
+
+                    <TableColumn fx:id="colRemaining"
+                                 text="Remaining"
+                                 prefWidth="110"/>
+
+                    <TableColumn fx:id="colNotes"
+                                 text="Notes"
+                                 prefWidth="250"/>
+
+                </columns>
+
+            </TableView>
+
+        </VBox>
 
     </center>
 

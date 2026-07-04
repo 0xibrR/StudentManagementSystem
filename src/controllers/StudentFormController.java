@@ -80,16 +80,20 @@ public class StudentFormController {
 
             int year = Integer.parseInt(yearText);
 
-            Date enrollmentDate =
-                    Date.valueOf(dpEnrollmentDate.getValue());
+            if (year < 1900 || year > 2100) {
 
-            Connection conn = DatabaseConnection.getConnection();
+                showAlert("Error", "Please enter a valid year.");
+                return;
 
-            PreparedStatement stmt;
+            }
 
-            if (student == null) {
+            Date enrollmentDate = Date.valueOf(dpEnrollmentDate.getValue());
 
-                String sql = """
+            try (Connection conn = DatabaseConnection.getConnection()) {
+
+                if (student == null) {
+
+                    String sql = """
                         INSERT INTO students
                         (
                             user_id,
@@ -102,18 +106,22 @@ public class StudentFormController {
                         VALUES (?, ?, ?, ?, ?, ?)
                         """;
 
-                stmt = conn.prepareStatement(sql);
+                    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                stmt.setInt(1, Session.getUserId());
-                stmt.setString(2, name);
-                stmt.setInt(3, year);
-                stmt.setString(4, phone);
-                stmt.setDate(5, enrollmentDate);
-                stmt.setString(6, notes);
+                        stmt.setInt(1, Session.getUserId());
+                        stmt.setString(2, name);
+                        stmt.setInt(3, year);
+                        stmt.setString(4, phone);
+                        stmt.setDate(5, enrollmentDate);
+                        stmt.setString(6, notes);
 
-            } else {
+                        stmt.executeUpdate();
 
-                String sql = """
+                    }
+
+                } else {
+
+                    String sql = """
                         UPDATE students
                         SET
                             name=?,
@@ -122,23 +130,26 @@ public class StudentFormController {
                             enrollment_date=?,
                             notes=?
                         WHERE id=?
+                        AND user_id=?
                         """;
 
-                stmt = conn.prepareStatement(sql);
+                    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                stmt.setString(1, name);
-                stmt.setInt(2, year);
-                stmt.setString(3, phone);
-                stmt.setDate(4, enrollmentDate);
-                stmt.setString(5, notes);
-                stmt.setInt(6, student.getId());
+                        stmt.setString(1, name);
+                        stmt.setInt(2, year);
+                        stmt.setString(3, phone);
+                        stmt.setDate(4, enrollmentDate);
+                        stmt.setString(5, notes);
+                        stmt.setInt(6, student.getId());
+                        stmt.setInt(7, Session.getUserId());
+
+                        stmt.executeUpdate();
+
+                    }
+
+                }
 
             }
-
-            stmt.executeUpdate();
-
-            stmt.close();
-            conn.close();
 
             if (homeController != null) {
                 homeController.loadStudents();
