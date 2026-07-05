@@ -12,6 +12,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import models.Session;
 import models.Student;
+import reports.StudentsReport;
+import reports.PaymentsReport;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -429,6 +431,25 @@ public class HomeController {
             alert.showAndWait();
 
         }
+
+    }
+
+    @FXML
+    private void handleExportStudentsReport() {
+
+        StudentsReport.generate(
+                tableStudents.getScene().getWindow(),
+                studentsList
+        );
+
+    }
+
+    @FXML
+    private void handleExportPaymentsReport() {
+
+        PaymentsReport.generate(
+                tableStudents.getScene().getWindow()
+        );
 
     }
 

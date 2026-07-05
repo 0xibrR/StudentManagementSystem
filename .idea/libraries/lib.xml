@@ -3,6 +3,7 @@
     <CLASSES>
       <root url="file://$PROJECT_DIR$/libraries/javafx-sdk-26.0.1/lib" />
       <root url="jar://$PROJECT_DIR$/libraries/mysql-connector-j-9.7.0/mysql-connector-j-9.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/openpdf-2.2.2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

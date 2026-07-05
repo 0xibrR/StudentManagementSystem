@@ -173,6 +173,9 @@
             <Button text="🗑 Delete"
                     onAction="#handleDelete"/>
 
+            <Button text="Student Payment Report"
+                    onAction="#handleExportStudentReport"/>
+
             <Button text="❌ Close"
                     onAction="#handleClose"/>
 

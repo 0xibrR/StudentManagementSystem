@@ -165,6 +165,18 @@
             <Button text="🗑 Delete"
                     onAction="#handleDelete"/>
 
+            <MenuButton text="Reports">
+                <items>
+                    <MenuItem
+                            text="Students Report"
+                            onAction="#handleExportStudentsReport"/>
+
+                    <MenuItem
+                            text="Payments Report"
+                            onAction="#handleExportPaymentsReport"/>
+                </items>
+            </MenuButton>
+
             <Button text="🔄 Refresh"
                     onAction="#handleRefresh"/>
 

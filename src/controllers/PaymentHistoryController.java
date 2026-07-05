@@ -12,6 +12,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import models.Payment;
 import models.Student;
+import reports.StudentPaymentReport;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -358,6 +359,16 @@ public class PaymentHistoryController {
             error.showAndWait();
 
         }
+
+    }
+
+    @FXML
+    private void handleExportStudentReport() {
+
+        StudentPaymentReport.generate(
+                tablePayments.getScene().getWindow(),
+                student
+        );
 
     }
 
