@@ -1,12 +1,12 @@
 <component name="libraryTable">
   <library name="lib">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/libraries/javafx-sdk-26.0.1/lib" />
       <root url="jar://$PROJECT_DIR$/libraries/mysql-connector-j-9.7.0/mysql-connector-j-9.7.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/libraries/openpdf-2.2.2.jar!/" />
+      <root url="file://$PROJECT_DIR$/libraries/javafx-sdk-27/lib" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
-    <jarDirectory url="file://$PROJECT_DIR$/libraries/javafx-sdk-26.0.1/lib" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/libraries/javafx-sdk-27/lib" recursive="false" />
   </library>
 </component>
