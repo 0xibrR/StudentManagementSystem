@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.AttendanceController"
+            prefWidth="1080" prefHeight="690" minWidth="850" minHeight="600"
+            styleClass="app-root" stylesheets="@../css/style.css">
+    <top>
+        <VBox spacing="4" styleClass="page-header">
+            <Label text="Daily attendance" styleClass="page-title"/>
+            <Label text="Choose a date and record the scheduled students." styleClass="page-subtitle"/>
+        </VBox>
+    </top>
+    <center>
+        <VBox spacing="12" styleClass="content-area">
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="search-bar">
+                <Label text="Attendance date" styleClass="metric-label"/>
+                <DatePicker fx:id="dpAttendanceDate"/>
+                <Button fx:id="btnLoadDay" text="Load day" onAction="#loadDay"/>
+                <Button fx:id="btnMarkAllPresent" text="Mark all present" onAction="#markAllPresent" disable="true"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblCount" styleClass="page-subtitle"/>
+            </HBox>
+            <TableView fx:id="tableAttendance" VBox.vgrow="ALWAYS">
+                <placeholder><Label fx:id="lblEmpty" text="لا توجد بيانات في الجدول"/></placeholder>
+                <columns>
+                    <TableColumn fx:id="colStudentId" text="ID" prefWidth="90" editable="false"/>
+                    <TableColumn fx:id="colStudentName" text="Student Name" prefWidth="300" editable="false"/>
+                    <TableColumn fx:id="colStatus" text="Attendance status" prefWidth="230"/>
+                    <TableColumn fx:id="colNotes" text="Attendance notes" prefWidth="380"/>
+                </columns>
+            </TableView>
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="search-bar">
+                <Label fx:id="lblReportFrom" text="التقرير من" styleClass="metric-label"/>
+                <DatePicker fx:id="dpReportFrom"/>
+                <Label fx:id="lblReportTo" text="التقرير إلى" styleClass="metric-label"/>
+                <DatePicker fx:id="dpReportTo"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnExportReport" text="Export period report" onAction="#exportReport"/>
+            </HBox>
+        </VBox>
+    </center>
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="action-bar">
+            <Button fx:id="btnClose" text="Close" onAction="#close"/>
+            <Button fx:id="btnSaveAttendance" text="Save attendance" styleClass="primary-button" onAction="#saveAttendance"/>
+        </HBox>
+    </bottom>
+</BorderPane>

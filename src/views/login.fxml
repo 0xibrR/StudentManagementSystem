@@ -1,24 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.LoginController"
-            prefWidth="350" prefHeight="400" styleClass="form-container" stylesheets="@../css/style.css">
-
-    <VBox alignment="CENTER" spacing="15" layoutX="25" layoutY="40" prefWidth="300">
-
-        <HBox spacing="20" alignment="CENTER">
-            <Label text="SIGN IN" styleClass="tab-label-selected"/>
-            <Label text="SIGN UP" styleClass="tab-label" onMouseClicked="#goToSignUp"/>
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controllers.LoginController"
+           prefWidth="430" prefHeight="410"
+           styleClass="app-root" stylesheets="@../css/style.css">
+    <VBox alignment="CENTER" spacing="16" maxWidth="350" maxHeight="380" styleClass="auth-form">
+        <Label text="Student Management" styleClass="page-title"/>
+        <Label text="Sign in to continue" styleClass="page-subtitle"/>
+        <HBox spacing="28" alignment="CENTER" style="-fx-padding:8 0 4 0;">
+            <Label text="SIGN IN" style="-fx-text-fill:#2864b4; -fx-font-weight:bold; -fx-underline:true;"/>
+            <Label text="SIGN UP" styleClass="link-label" onMouseClicked="#goToSignUp"/>
         </HBox>
-
-        <TextField fx:id="txtUsername" promptText="Username" styleClass="input-field"/>
-        <PasswordField fx:id="txtPassword" promptText="Password" styleClass="input-field"/>
-
-        <Button text="LOGIN" styleClass="primary-button" onAction="#handleLogin"/>
-
+        <TextField fx:id="txtUsername" promptText="Username" styleClass="input-field" maxWidth="Infinity"/>
+        <PasswordField fx:id="txtPassword" promptText="Password" styleClass="input-field" maxWidth="Infinity"/>
+        <Button text="LOGIN" styleClass="primary-button" onAction="#handleLogin" maxWidth="Infinity"/>
+        <Label text="Secure student and payment records" styleClass="page-subtitle"/>
         <Label text="Don't have an account? Sign up" styleClass="link-label" onMouseClicked="#goToSignUp"/>
     </VBox>
-</AnchorPane>
+</StackPane>

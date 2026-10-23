@@ -1,26 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.SignUpController"
-            prefWidth="350" prefHeight="450" styleClass="form-container" stylesheets="@../css/style.css">
-
-    <VBox alignment="CENTER" spacing="15" layoutX="25" layoutY="40" prefWidth="300">
-
-        <HBox spacing="20" alignment="CENTER">
-            <Label text="SIGN IN" styleClass="tab-label" onMouseClicked="#goToLogin"/>
-            <Label text="SIGN UP" styleClass="tab-label-selected"/>
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="controllers.SignUpController"
+           prefWidth="430" prefHeight="490"
+           styleClass="app-root" stylesheets="@../css/style.css">
+    <VBox alignment="CENTER" spacing="14" maxWidth="350" maxHeight="460" styleClass="auth-form">
+        <Label text="Create your account" styleClass="page-title"/>
+        <Label text="Set up your student management workspace" styleClass="page-subtitle"/>
+        <HBox spacing="28" alignment="CENTER" style="-fx-padding:6 0 2 0;">
+            <Label text="SIGN IN" styleClass="link-label" onMouseClicked="#goToLogin"/>
+            <Label text="SIGN UP" style="-fx-text-fill:#2864b4; -fx-font-weight:bold; -fx-underline:true;"/>
         </HBox>
-
-        <TextField fx:id="txtFullName" promptText="Full name" styleClass="input-field"/>
-        <TextField fx:id="txtUsername" promptText="Username" styleClass="input-field"/>
-        <PasswordField fx:id="txtPassword" promptText="Password" styleClass="input-field"/>
-        <PasswordField fx:id="txtConfirmPassword" promptText="Confirm Password" styleClass="input-field"/>
-
-        <Button text="SIGN UP" styleClass="primary-button" onAction="#handleSignUp"/>
-
-        <Label text="Already have account? Sign in" styleClass="link-label" onMouseClicked="#goToLogin"/>
+        <TextField fx:id="txtFullName" promptText="Full name" styleClass="input-field" maxWidth="Infinity"/>
+        <TextField fx:id="txtUsername" promptText="Username" styleClass="input-field" maxWidth="Infinity"/>
+        <PasswordField fx:id="txtPassword" promptText="Password" styleClass="input-field" maxWidth="Infinity"/>
+        <PasswordField fx:id="txtConfirmPassword" promptText="Confirm password" styleClass="input-field" maxWidth="Infinity"/>
+        <Button text="CREATE ACCOUNT" styleClass="primary-button" onAction="#handleSignUp" maxWidth="Infinity"/>
+        <Label text="Already have an account? Sign in" styleClass="link-label" onMouseClicked="#goToLogin"/>
     </VBox>
-</AnchorPane>
+</StackPane>

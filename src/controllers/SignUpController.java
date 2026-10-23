@@ -1,20 +1,23 @@
 package controllers;
 
-import database.DatabaseConnection;
+import ui.WindowChrome;
+import ui.I18n;
+
+import database.UserRepository;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 public class SignUpController {
+
+    private final UserRepository userRepository = new UserRepository();
 
     @FXML
     private TextField txtFullName;
@@ -29,12 +32,18 @@ public class SignUpController {
     private PasswordField txtConfirmPassword;
 
     @FXML
+    private void initialize() {
+        txtUsername.setTextFormatter(new TextFormatter<>(change ->
+                change.getControlNewText().matches("[A-Za-z0-9._-]{0,50}") ? change : null));
+    }
+
+    @FXML
     private void handleSignUp() {
 
         String fullName = txtFullName.getText().trim();
         String username = txtUsername.getText().trim();
-        String password = txtPassword.getText().trim();
-        String confirmPassword = txtConfirmPassword.getText().trim();
+        String password = txtPassword.getText();
+        String confirmPassword = txtConfirmPassword.getText();
 
         // Validate Empty Fields
         if (fullName.isEmpty() || username.isEmpty()
@@ -52,9 +61,8 @@ public class SignUpController {
         }
 
         // Validate Username
-        if (username.length() < 4) {
-
-            showAlert("Error", "Username must be at least 4 characters.");
+        if (!username.matches("[A-Za-z0-9._-]{4,50}")) {
+            showAlert("Error", "Username must be 4-50 characters using English letters, numbers, dots, underscores, or hyphens.");
             return;
         }
 
@@ -72,40 +80,10 @@ public class SignUpController {
             return;
         }
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
-
-            // Check Username
-            String checkSql = "SELECT 1 FROM users WHERE username = ?";
-
-            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-
-                checkStmt.setString(1, username);
-
-                try (ResultSet rs = checkStmt.executeQuery()) {
-
-                    if (rs.next()) {
-
-                        showAlert("Error", "Username already exists.");
-                        return;
-
-                    }
-
-                }
-
-            }
-
-            // Create Account
-            String insertSql =
-                    "INSERT INTO users(full_name, username, password) VALUES(?,?,?)";
-
-            try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
-
-                stmt.setString(1, fullName);
-                stmt.setString(2, username);
-                stmt.setString(3, password);
-
-                stmt.executeUpdate();
-
+        try {
+            if (!userRepository.register(fullName, username, password)) {
+                showAlert("Error", "Username already exists.");
+                return;
             }
 
             showAlert("Success", "Account created successfully.");
@@ -132,7 +110,13 @@ public class SignUpController {
 
             Stage stage = (Stage) txtFullName.getScene().getWindow();
 
-            stage.setScene(new Scene(loader.load()));
+            stage.setScene(new Scene(WindowChrome.wrap(stage, loader.load())));
+            stage.setMaximized(false);
+            stage.setResizable(false);
+            stage.setMinWidth(0);
+            stage.setMinHeight(0);
+            stage.sizeToScene();
+            stage.centerOnScreen();
 
         } catch (IOException e) {
 
@@ -149,6 +133,7 @@ public class SignUpController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+        I18n.localize(alert);
 
         alert.showAndWait();
 

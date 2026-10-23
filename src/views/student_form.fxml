@@ -1,85 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.control.DatePicker?>
 
-<AnchorPane xmlns:fx="http://javafx.com/fxml"
+<BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.StudentFormController"
-            prefWidth="420"
-            prefHeight="380">
-
-    <children>
-
-        <Label text="Student Form"
-               layoutX="120"
-               layoutY="20"
-               style="-fx-font-size:22px; -fx-font-weight:bold;"/>
-
-        <!-- Name -->
-        <Label text="Name:"
-               layoutX="40"
-               layoutY="90"/>
-
-        <TextField fx:id="txtName"
-                   layoutX="150"
-                   layoutY="85"
-                   prefWidth="220"/>
-
-        <!-- Birth Year -->
-        <Label text="Year of Birth:"
-               layoutX="40"
-               layoutY="135"/>
-
-        <TextField fx:id="txtYear"
-                   layoutX="150"
-                   layoutY="130"
-                   prefWidth="220"/>
-
-        <!-- Phone -->
-        <Label text="Phone:"
-               layoutX="40"
-               layoutY="180"/>
-
-        <TextField fx:id="txtPhone"
-                   layoutX="150"
-                   layoutY="175"
-                   prefWidth="220"/>
-
-        <!-- Enrollment Date -->
-        <Label text="Registration Date:"
-               layoutX="40"
-               layoutY="225"/>
-
-        <DatePicker fx:id="dpEnrollmentDate"
-                    layoutX="150"
-                    layoutY="220"
-                    prefWidth="220"/>
-
-        <!-- Notes -->
-        <Label text="Notes:"
-               layoutX="40"
-               layoutY="275"/>
-
-        <TextArea fx:id="txtNotes"
-                  layoutX="150"
-                  layoutY="270"
-                  prefWidth="220"
-                  prefHeight="70"/>
-
-        <!-- Buttons -->
-        <Button text="Save"
-                layoutX="150"
-                layoutY="360"
-                prefWidth="80"
-                onAction="#handleSave"/>
-
-        <Button text="Cancel"
-                layoutX="240"
-                layoutY="360"
-                prefWidth="80"
-                onAction="#handleCancel"/>
-
-    </children>
-
-</AnchorPane>
+            prefWidth="560" prefHeight="690"
+            styleClass="app-root" stylesheets="@../css/style.css">
+    <top>
+        <VBox spacing="4" styleClass="page-header">
+            <Label text="Student details" styleClass="page-title"/>
+            <Label text="Enter the student's information below." styleClass="page-subtitle"/>
+        </VBox>
+    </top>
+    <center>
+        <GridPane alignment="CENTER" hgap="16" vgap="12" style="-fx-padding:20 32;">
+            <columnConstraints>
+                <ColumnConstraints minWidth="130"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="240"/>
+            </columnConstraints>
+            <Label text="Name" styleClass="metric-label"/>
+            <TextField fx:id="txtName" promptText="Student name" GridPane.columnIndex="1"/>
+            <Label text="Year of birth" styleClass="metric-label" GridPane.rowIndex="1"/>
+            <TextField fx:id="txtYear" promptText="e.g. 2008" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+            <Label text="Phone" styleClass="metric-label" GridPane.rowIndex="2"/>
+            <TextField fx:id="txtPhone" promptText="Phone number" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            <Label text="Registration date" styleClass="metric-label" GridPane.rowIndex="3"/>
+            <DatePicker fx:id="dpEnrollmentDate" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            <Label text="Notes" styleClass="metric-label" GridPane.rowIndex="4"/>
+            <TextArea fx:id="txtNotes" promptText="Optional notes" prefRowCount="4" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+            <VBox spacing="7" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                <Label fx:id="lblWeeklyAttendanceDays" text="Weekly attendance days" styleClass="metric-label"/>
+                <FlowPane hgap="9" vgap="8">
+                <CheckBox fx:id="chkSunday" text="Sunday"/>
+                <CheckBox fx:id="chkMonday" text="Monday"/>
+                <CheckBox fx:id="chkTuesday" text="Tuesday"/>
+                <CheckBox fx:id="chkWednesday" text="Wednesday"/>
+                <CheckBox fx:id="chkThursday" text="Thursday"/>
+                <CheckBox fx:id="chkFriday" text="Friday"/>
+                <CheckBox fx:id="chkSaturday" text="Saturday"/>
+                </FlowPane>
+                <Label fx:id="lblWeekdayHelp" text="Select one or more days; attendance is only recorded on selected days." styleClass="page-subtitle" wrapText="true"/>
+            </VBox>
+            <Label fx:id="lblScheduleEffectiveFrom" text="Schedule effective from" styleClass="metric-label" GridPane.rowIndex="6"/>
+            <DatePicker fx:id="dpScheduleStart" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+        </GridPane>
+    </center>
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10" styleClass="action-bar">
+            <Button fx:id="btnCancel" text="Cancel" onAction="#handleCancel"/>
+            <Button fx:id="btnSaveStudent" text="Save student" styleClass="primary-button" onAction="#handleSave"/>
+        </HBox>
+    </bottom>
+</BorderPane>

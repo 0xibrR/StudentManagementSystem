@@ -6,7 +6,6 @@ import java.awt.Desktop;
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
@@ -16,6 +15,7 @@ import javafx.scene.control.Alert;
 import javafx.stage.Window;
 import javafx.stage.FileChooser;
 import models.Student;
+import ui.I18n;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,40 +28,15 @@ public class StudentsReport {
     // Fonts
     // ==========================================
 
-    private static final Font TITLE_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA_BOLD,
-                    22,
-                    Color.BLUE
-            );
+    private static final Font TITLE_FONT = PdfFonts.title(Color.BLUE);
 
-    private static final Font SUBTITLE_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA_BOLD,
-                    16,
-                    Color.DARK_GRAY
-            );
+    private static final Font SUBTITLE_FONT = PdfFonts.subtitle(Color.DARK_GRAY);
 
-    private static final Font HEADER_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA_BOLD,
-                    12,
-                    Color.WHITE
-            );
+    private static final Font HEADER_FONT = PdfFonts.header(Color.WHITE);
 
-    private static final Font NORMAL_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA,
-                    11,
-                    Color.BLACK
-            );
+    private static final Font NORMAL_FONT = PdfFonts.normal(Color.BLACK);
 
-    private static final Font FOOTER_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA_OBLIQUE,
-                    10,
-                    Color.GRAY
-            );
+    private static final Font FOOTER_FONT = PdfFonts.footer(Color.GRAY);
 
     // ==========================================
     // Colors
@@ -85,11 +60,11 @@ public class StudentsReport {
 
         FileChooser chooser = new FileChooser();
 
-        chooser.setTitle("Save PDF Report");
+        chooser.setTitle(I18n.text("Save PDF Report"));
 
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter(
-                        "PDF Files",
+                        I18n.text("PDF Files"),
                         "*.pdf"
                 )
         );
@@ -106,9 +81,13 @@ public class StudentsReport {
 
     private static PdfPCell createHeaderCell(String text) {
 
+        text = I18n.text(text);
+
         PdfPCell cell = new PdfPCell(
                 new Phrase(text, HEADER_FONT)
         );
+
+        PdfFonts.enableRtl(cell, text);
 
         cell.setBackgroundColor(HEADER_COLOR);
 
@@ -124,12 +103,16 @@ public class StudentsReport {
 
     private static PdfPCell createCell(String text, Color background) {
 
+        text = I18n.text(text);
+
         PdfPCell cell = new PdfPCell(
                 new Phrase(
                         text == null ? "" : text,
                         NORMAL_FONT
                 )
         );
+
+        PdfFonts.enableRtl(cell, text);
 
         cell.setBackgroundColor(background);
 
@@ -181,7 +164,7 @@ public class StudentsReport {
 
         File file = chooseSaveLocation(
                 owner,
-                "Students_Report.pdf"
+                ReportFileNames.create("Students_Report", null, "pdf")
         );
 
         if (file == null) {
@@ -350,6 +333,7 @@ public class StudentsReport {
             alert.setTitle("Success");
             alert.setHeaderText(null);
             alert.setContentText("Students report created successfully.");
+            I18n.localize(alert);
 
             alert.showAndWait();
 
@@ -364,6 +348,7 @@ public class StudentsReport {
             alert.setHeaderText(null);
 
             alert.setContentText("Failed to create PDF report.");
+            I18n.localize(alert);
 
             alert.showAndWait();
 

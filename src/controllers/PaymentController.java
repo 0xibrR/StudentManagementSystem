@@ -1,19 +1,23 @@
 package controllers;
 
-import database.DatabaseConnection;
+import database.PaymentRepository;
+import ui.I18n;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import models.Payment;
 import models.Student;
+import models.Session;
 
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.PreparedStatement;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 
 public class PaymentController {
+
+    private static final BigDecimal ZERO = new BigDecimal("0.00");
 
     @FXML
     private Label lblStudent;
@@ -41,14 +45,15 @@ public class PaymentController {
 
     private Student student;
     private Payment payment;
+    private final PaymentRepository paymentRepository = new PaymentRepository();
 
     @FXML
     public void initialize() {
 
         cmbMethod.setItems(FXCollections.observableArrayList(
-                "Cash",
-                "Bank",
-                "Mixed"
+                I18n.paymentMethod("Cash"),
+                I18n.paymentMethod("Bank"),
+                I18n.paymentMethod("Mixed")
         ));
 
         txtCash.textProperty().addListener((obs, oldVal, newVal) -> calculate());
@@ -75,7 +80,7 @@ public class PaymentController {
             return;
         }
 
-        cmbMethod.setValue(payment.getPaymentMethod());
+        cmbMethod.setValue(I18n.paymentMethod(payment.getPaymentMethod()));
 
         txtCash.setText(String.valueOf(payment.getCashAmount()));
 
@@ -93,27 +98,21 @@ public class PaymentController {
 
         try {
 
-            double cash = txtCash.getText().isBlank()
-                    ? 0
-                    : Double.parseDouble(txtCash.getText());
+            BigDecimal cash = parseAmount(txtCash.getText());
 
-            double bank = txtBank.getText().isBlank()
-                    ? 0
-                    : Double.parseDouble(txtBank.getText());
+            BigDecimal bank = parseAmount(txtBank.getText());
 
-            double amountDue = txtAmountDue.getText().isBlank()
-                    ? 0
-                    : Double.parseDouble(txtAmountDue.getText());
+            BigDecimal amountDue = parseAmount(txtAmountDue.getText());
 
-            double paid = cash + bank;
+            BigDecimal paid = cash.add(bank);
 
-            double remaining = amountDue - paid;
+            BigDecimal remaining = amountDue.subtract(paid);
 
-            txtPaid.setText(String.format("%.2f", paid));
+            txtPaid.setText(paid.toPlainString());
 
-            txtRemaining.setText(String.format("%.2f", remaining));
+            txtRemaining.setText(remaining.toPlainString());
 
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException | ArithmeticException e) {
 
             txtPaid.clear();
             txtRemaining.clear();
@@ -141,51 +140,47 @@ public class PaymentController {
 
             }
 
-            double cash = txtCash.getText().isBlank()
-                    ? 0
-                    : Double.parseDouble(txtCash.getText());
+            BigDecimal cash = parseAmount(txtCash.getText());
 
-            double bank = txtBank.getText().isBlank()
-                    ? 0
-                    : Double.parseDouble(txtBank.getText());
+            BigDecimal bank = parseAmount(txtBank.getText());
 
-            double total = Double.parseDouble(txtAmountDue.getText());
+            BigDecimal total = parseAmount(txtAmountDue.getText());
 
             // ===== Validation =====
 
-            if (cash < 0) {
+            if (cash.compareTo(BigDecimal.ZERO) < 0) {
 
                 showAlert("Error", "Cash Amount cannot be negative.");
                 return;
 
             }
 
-            if (bank < 0) {
+            if (bank.compareTo(BigDecimal.ZERO) < 0) {
 
                 showAlert("Error", "Bank Amount cannot be negative.");
                 return;
 
             }
 
-            if (total <= 0) {
+            if (total.compareTo(BigDecimal.ZERO) <= 0) {
 
                 showAlert("Error", "Amount Due must be greater than zero.");
                 return;
 
             }
 
-            String method = cmbMethod.getValue();
+            String method = I18n.canonicalPaymentMethod(cmbMethod.getValue());
 
             if (method.equals("Cash")) {
 
-                if (cash <= 0) {
+                if (cash.compareTo(BigDecimal.ZERO) <= 0) {
 
                     showAlert("Error", "Please enter the Cash Amount.");
                     return;
 
                 }
 
-                if (bank != 0) {
+                if (bank.compareTo(BigDecimal.ZERO) != 0) {
 
                     showAlert("Error", "Bank Amount must be 0 when payment method is Cash.");
                     return;
@@ -196,14 +191,14 @@ public class PaymentController {
 
             if (method.equals("Bank")) {
 
-                if (bank <= 0) {
+                if (bank.compareTo(BigDecimal.ZERO) <= 0) {
 
                     showAlert("Error", "Please enter the Bank Amount.");
                     return;
 
                 }
 
-                if (cash != 0) {
+                if (cash.compareTo(BigDecimal.ZERO) != 0) {
 
                     showAlert("Error", "Cash Amount must be 0 when payment method is Bank.");
                     return;
@@ -214,16 +209,16 @@ public class PaymentController {
 
             if (method.equals("Mixed")) {
 
-                if (cash <= 0 && bank <= 0) {
+                if (cash.compareTo(BigDecimal.ZERO) <= 0 || bank.compareTo(BigDecimal.ZERO) <= 0) {
 
-                    showAlert("Error", "Enter Cash or Bank Amount.");
+                    showAlert("Error", "Mixed payment requires positive cash and bank amounts.");
                     return;
 
                 }
 
             }
 
-            if ((cash + bank) > total) {
+            if (cash.add(bank).compareTo(total) > 0) {
 
                 showAlert("Error",
                         "Paid amount cannot be greater than Amount Due.");
@@ -232,66 +227,14 @@ public class PaymentController {
 
             }
 
-            Connection con = DatabaseConnection.getConnection();
-
-            PreparedStatement ps;
-
-            if (payment == null) {
-
-                String sql = """
-                    INSERT INTO payments
-                    (
-                        student_id,
-                        payment_method,
-                        cash_amount,
-                        bank_amount,
-                        total_amount,
-                        payment_date,
-                        notes
-                    )
-                    VALUES (?,?,?,?,?,?,?)
-                    """;
-
-                ps = con.prepareStatement(sql);
-
-                ps.setInt(1, student.getId());
-                ps.setString(2, method);
-                ps.setDouble(3, cash);
-                ps.setDouble(4, bank);
-                ps.setDouble(5, total);
-                ps.setDate(6, Date.valueOf(LocalDate.now()));
-                ps.setString(7, txtNotes.getText());
-
-            } else {
-
-                String sql = """
-                    UPDATE payments
-                    SET
-                        payment_method=?,
-                        cash_amount=?,
-                        bank_amount=?,
-                        total_amount=?,
-                        notes=?
-                    WHERE id=?
-                    AND student_id=?
-                    """;
-
-                ps = con.prepareStatement(sql);
-
-                ps.setString(1, method);
-                ps.setDouble(2, cash);
-                ps.setDouble(3, bank);
-                ps.setDouble(4, total);
-                ps.setString(5, txtNotes.getText());
-                ps.setInt(6, payment.getId());
-                ps.setInt(7, student.getId());
-
+            Payment paymentToSave = new Payment(payment == null ? 0 : payment.getId(),
+                    student.getId(), method, cash, bank, total,
+                    payment == null ? Date.valueOf(LocalDate.now()) : payment.getPaymentDate(),
+                    txtNotes.getText());
+            if (!paymentRepository.save(paymentToSave, Session.getUserId())) {
+                showAlert("Error", "The student or payment record is no longer available.");
+                return;
             }
-
-            ps.executeUpdate();
-
-            ps.close();
-            con.close();
 
             if (payment == null) {
                 showAlert("Success", "Payment added successfully.");
@@ -301,9 +244,9 @@ public class PaymentController {
 
             closeWindow();
 
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException | ArithmeticException e) {
 
-            showAlert("Error", "Please enter valid numeric values.");
+            showAlert("Error", "Enter valid amounts with no more than 2 decimal places.");
 
         } catch (Exception e) {
 
@@ -313,6 +256,11 @@ public class PaymentController {
 
         }
 
+    }
+
+    private BigDecimal parseAmount(String text) {
+        if (text == null || text.isBlank()) return ZERO;
+        return new BigDecimal(text.trim()).setScale(2, RoundingMode.UNNECESSARY);
     }
 
     @FXML
@@ -337,6 +285,7 @@ public class PaymentController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+        I18n.localize(alert);
 
         alert.showAndWait();
 

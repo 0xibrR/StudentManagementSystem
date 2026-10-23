@@ -1,26 +1,27 @@
 package models;
 
 import java.sql.Date;
+import java.math.BigDecimal;
 
 public class Payment {
 
     private int id;
     private int studentId;
     private String paymentMethod;
-    private double cashAmount;
-    private double bankAmount;
-    private double totalAmount;
-    private double paid;
-    private double remaining;
+    private BigDecimal cashAmount;
+    private BigDecimal bankAmount;
+    private BigDecimal totalAmount;
+    private BigDecimal paid;
+    private BigDecimal remaining;
     private Date paymentDate;
     private String notes;
 
     public Payment(int id,
                    int studentId,
                    String paymentMethod,
-                   double cashAmount,
-                   double bankAmount,
-                   double totalAmount,
+                   BigDecimal cashAmount,
+                   BigDecimal bankAmount,
+                   BigDecimal totalAmount,
                    Date paymentDate,
                    String notes) {
 
@@ -33,8 +34,8 @@ public class Payment {
         this.paymentDate = paymentDate;
         this.notes = notes;
 
-        this.paid = cashAmount + bankAmount;
-        this.remaining = totalAmount - this.paid;
+        this.paid = cashAmount.add(bankAmount);
+        this.remaining = totalAmount.subtract(this.paid);
     }
 
     public int getId() {
@@ -49,23 +50,23 @@ public class Payment {
         return paymentMethod;
     }
 
-    public double getCashAmount() {
+    public BigDecimal getCashAmount() {
         return cashAmount;
     }
 
-    public double getBankAmount() {
+    public BigDecimal getBankAmount() {
         return bankAmount;
     }
 
-    public double getTotalAmount() {
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public double getPaid() {
+    public BigDecimal getPaid() {
         return paid;
     }
 
-    public double getRemaining() {
+    public BigDecimal getRemaining() {
         return remaining;
     }
 

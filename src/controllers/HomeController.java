@@ -1,8 +1,15 @@
 package controllers;
 
-import database.DatabaseConnection;
+import ui.WindowChrome;
+import ui.I18n;
+
+import database.DashboardRepository;
+import database.PaymentRepository;
+import database.StudentRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -14,11 +21,16 @@ import models.Session;
 import models.Student;
 import reports.StudentsReport;
 import reports.PaymentsReport;
+import reports.CsvExporter;
+import models.PaymentReportRow;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.TreeSet;
+import java.util.Comparator;
 
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.math.BigDecimal;
+import java.util.List;
 
 public class HomeController {
 
@@ -27,6 +39,11 @@ public class HomeController {
 
     @FXML
     private TextField txtSearch;
+
+    @FXML
+    private ComboBox<String> cmbBirthYearFilter;
+    @FXML
+    private Label lblStudentResults;
 
     @FXML
     private TableColumn<Student, Integer> colId;
@@ -70,7 +87,12 @@ public class HomeController {
     @FXML
     private VBox remainingCard;
 
-    private ObservableList<Student> studentsList;
+    private final ObservableList<Student> allStudents = FXCollections.observableArrayList();
+    private FilteredList<Student> filteredStudents;
+    private SortedList<Student> sortedStudents;
+    private final StudentRepository studentRepository = new StudentRepository();
+    private final DashboardRepository dashboardRepository = new DashboardRepository();
+    private final PaymentRepository paymentRepository = new PaymentRepository();
 
     @FXML
     public void initialize() {
@@ -82,276 +104,74 @@ public class HomeController {
         colEnrollmentDate.setCellValueFactory(new PropertyValueFactory<>("enrollmentDate"));
         colNotes.setCellValueFactory(new PropertyValueFactory<>("notes"));
 
-        lblWelcome.setText("Welcome, " + Session.getFullName() + "!");
+        filteredStudents = new FilteredList<>(allStudents, student -> true);
+        sortedStudents = new SortedList<>(filteredStudents);
+        sortedStudents.comparatorProperty().bind(tableStudents.comparatorProperty());
+        tableStudents.setItems(sortedStudents);
+        cmbBirthYearFilter.getItems().setAll(I18n.text("All years"));
+        cmbBirthYearFilter.setValue(I18n.text("All years"));
+
+        I18n.setText(lblWelcome, "Welcome, " + Session.getFullName() + "!");
 
         loadStudents();
         loadDashboard();
 
-        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> {
-            searchStudents(newValue);
-        });
+        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> applyStudentFilters());
+        cmbBirthYearFilter.valueProperty().addListener((observable, oldValue, newValue) -> applyStudentFilters());
     }
 
     public void loadStudents() {
-
-        studentsList = FXCollections.observableArrayList();
-
-        String sql = """
-                SELECT *
-                FROM students
-                WHERE user_id = ?
-                ORDER BY id
-                """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, Session.getUserId());
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-
-                Student student = new Student(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getInt("yearOfBirth"),
-                        rs.getString("phone"),
-                        rs.getDate("enrollment_date"),
-                        rs.getString("notes")
-                );
-
-                studentsList.add(student);
-
-            }
-
-            tableStudents.setItems(studentsList);
-
+        try {
+            allStudents.setAll(studentRepository.findByUser(Session.getUserId(), null));
+            refreshBirthYearFilter();
+            applyStudentFilters();
         } catch (Exception e) {
-
             e.printStackTrace();
-
         }
+    }
 
+    private void refreshBirthYearFilter() {
+        String selected = cmbBirthYearFilter.getValue();
+        TreeSet<String> years = new TreeSet<>(Comparator.reverseOrder());
+        for (Student student : allStudents) years.add(String.valueOf(student.getYearOfBirth()));
+        cmbBirthYearFilter.getItems().setAll(I18n.text("All years"));
+        cmbBirthYearFilter.getItems().addAll(years);
+        cmbBirthYearFilter.setValue(selected != null && cmbBirthYearFilter.getItems().contains(selected)
+                ? selected : I18n.text("All years"));
+    }
+
+    private void applyStudentFilters() {
+        if (filteredStudents == null) return;
+        String query = txtSearch.getText() == null ? "" : txtSearch.getText().trim().toLowerCase(Locale.ROOT);
+        String selectedYear = cmbBirthYearFilter.getValue();
+        filteredStudents.setPredicate(student -> {
+            if (selectedYear != null && !selectedYear.equals(I18n.text("All years"))
+                    && !String.valueOf(student.getYearOfBirth()).equals(selectedYear)) return false;
+            if (query.isEmpty()) return true;
+            String searchable = (student.getId() + " " + student.getName() + " " + student.getYearOfBirth() + " "
+                    + safe(student.getPhone()) + " " + safe(student.getNotes())).toLowerCase(Locale.ROOT);
+            return searchable.contains(query);
+        });
+        I18n.setText(lblStudentResults, filteredStudents.size() + " of " + allStudents.size() + " students");
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
     }
 
     private void loadDashboard() {
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
-
-            // ==========================
-            // Total Students
-            // ==========================
-
-            String sqlStudents = """
-                    SELECT COUNT(*)
-                    FROM students
-                    WHERE user_id = ?
-                    """;
-
-            PreparedStatement psStudents = conn.prepareStatement(sqlStudents);
-            psStudents.setInt(1, Session.getUserId());
-
-            ResultSet rsStudents = psStudents.executeQuery();
-
-            if (rsStudents.next()) {
-                lblTotalStudents.setText(String.valueOf(rsStudents.getInt(1)));
-            }
-
-            // ==========================
-            // Total Payments
-            // ==========================
-
-            String sqlPayments = """
-                    SELECT COUNT(*)
-                    FROM payments p
-                    JOIN students s
-                    ON p.student_id = s.id
-                    WHERE s.user_id = ?
-                    """;
-
-            PreparedStatement psPayments = conn.prepareStatement(sqlPayments);
-            psPayments.setInt(1, Session.getUserId());
-
-            ResultSet rsPayments = psPayments.executeQuery();
-
-            if (rsPayments.next()) {
-                lblTotalPayments.setText(String.valueOf(rsPayments.getInt(1)));
-            }
-
-            // ==========================
-            // Cash Income
-            // ==========================
-
-            String sqlCash = """
-                    SELECT IFNULL(SUM(cash_amount),0)
-                    FROM payments p
-                    JOIN students s
-                    ON p.student_id = s.id
-                    WHERE s.user_id = ?
-                    """;
-
-            PreparedStatement psCash = conn.prepareStatement(sqlCash);
-            psCash.setInt(1, Session.getUserId());
-
-            ResultSet rsCash = psCash.executeQuery();
-
-            if (rsCash.next()) {
-                lblCashIncome.setText(
-                        String.format("%.2f ₪", rsCash.getDouble(1))
-                );
-            }
-
-            // ==========================
-            // Bank Income
-            // ==========================
-
-            String sqlBank = """
-                    SELECT IFNULL(SUM(bank_amount),0)
-                    FROM payments p
-                    JOIN students s
-                    ON p.student_id = s.id
-                    WHERE s.user_id = ?
-                    """;
-
-            PreparedStatement psBank = conn.prepareStatement(sqlBank);
-            psBank.setInt(1, Session.getUserId());
-
-            ResultSet rsBank = psBank.executeQuery();
-
-            if (rsBank.next()) {
-                lblBankIncome.setText(
-                        String.format("%.2f ₪", rsBank.getDouble(1))
-                );
-            }
-
-            // ==========================
-            // Remaining
-            // ==========================
-
-            String sqlRemaining = """
-                    SELECT IFNULL(
-                        SUM(total_amount - (cash_amount + bank_amount)),
-                        0
-                    )
-                    FROM payments p
-                    JOIN students s
-                    ON p.student_id = s.id
-                    WHERE s.user_id = ?
-                    """;
-
-            PreparedStatement psRemaining = conn.prepareStatement(sqlRemaining);
-
-            psRemaining.setInt(1, Session.getUserId());
-
-            ResultSet rsRemaining = psRemaining.executeQuery();
-
-            if (rsRemaining.next()) {
-
-                double remaining = rsRemaining.getDouble(1);
-
-                lblRemaining.setText(
-                        String.format("%.2f ₪", remaining)
-                );
-
-                if (remaining <= 0) {
-
-                    remainingCard.setStyle("""
-                            -fx-background-color:#4CAF50;
-                            -fx-background-radius:10;
-                            -fx-padding:10;
-                            """);
-
-                } else {
-
-                    remainingCard.setStyle("""
-                            -fx-background-color:#FF9800;
-                            -fx-background-radius:10;
-                            -fx-padding:10;
-                            """);
-
-                }
-
-            }
-
-            // ==========================
-            // Total Income
-            // ==========================
-
-            String sqlTotalIncome = """
-                    SELECT IFNULL(
-                        SUM(cash_amount + bank_amount),
-                        0
-                    )
-                    FROM payments p
-                    JOIN students s
-                    ON p.student_id = s.id
-                    WHERE s.user_id = ?
-                    """;
-
-            PreparedStatement psTotalIncome = conn.prepareStatement(sqlTotalIncome);
-            psTotalIncome.setInt(1, Session.getUserId());
-
-            ResultSet rsTotalIncome = psTotalIncome.executeQuery();
-
-            if (rsTotalIncome.next()) {
-                lblTotalIncome.setText(
-                        String.format("%.2f ₪", rsTotalIncome.getDouble(1))
-                );
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-        }
-
-    }
-
-    private void searchStudents(String keyword) {
-
-        studentsList = FXCollections.observableArrayList();
-
-        String sql = """
-                SELECT *
-                FROM students
-                WHERE user_id = ?
-                AND (
-                    name LIKE ?
-                    OR phone LIKE ?
-                    OR CAST(yearOfBirth AS CHAR) LIKE ?
-                )
-                ORDER BY id
-                """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            String search = "%" + keyword + "%";
-
-            ps.setInt(1, Session.getUserId());
-            ps.setString(2, search);
-            ps.setString(3, search);
-            ps.setString(4, search);
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-
-                Student student = new Student(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getInt("yearOfBirth"),
-                        rs.getString("phone"),
-                        rs.getDate("enrollment_date"),
-                        rs.getString("notes")
-                );
-
-                studentsList.add(student);
-
-            }
-
-            tableStudents.setItems(studentsList);
+        try {
+            var summary = dashboardRepository.getSummary(Session.getUserId());
+            lblTotalStudents.setText(String.valueOf(summary.getStudents()));
+            lblTotalPayments.setText(String.valueOf(summary.getPayments()));
+            lblCashIncome.setText(String.format("%.2f ₪", summary.getCash()));
+            lblBankIncome.setText(String.format("%.2f ₪", summary.getBank()));
+            lblRemaining.setText(String.format("%.2f ₪", summary.getRemaining()));
+            lblTotalIncome.setText(String.format("%.2f ₪", summary.getIncome()));
+            remainingCard.setStyle(summary.getRemaining().compareTo(BigDecimal.ZERO) <= 0
+                    ? "-fx-border-color:#22a06b; -fx-border-radius:12;"
+                    : "-fx-border-color:#e79218; -fx-border-radius:12;");
 
         } catch (Exception e) {
 
@@ -388,6 +208,7 @@ public class HomeController {
             alert.setTitle("Warning");
             alert.setHeaderText(null);
             alert.setContentText("Please select a student first.");
+            I18n.localize(alert);
             alert.showAndWait();
 
             return;
@@ -398,24 +219,14 @@ public class HomeController {
         confirm.setTitle("Delete Student");
         confirm.setHeaderText(null);
         confirm.setContentText("Are you sure you want to delete this student?");
+        I18n.localize(confirm);
 
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
             return;
         }
 
-        String sql = """
-                DELETE FROM students
-                WHERE id = ?
-                AND user_id = ?
-                """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, student.getId());
-            ps.setInt(2, Session.getUserId());
-
-            ps.executeUpdate();
+        try {
+            studentRepository.delete(student.getId(), Session.getUserId());
 
             loadStudents();
             loadDashboard();
@@ -428,6 +239,7 @@ public class HomeController {
             alert.setTitle("Error");
             alert.setHeaderText(null);
             alert.setContentText("Failed to delete student.");
+            I18n.localize(alert);
             alert.showAndWait();
 
         }
@@ -439,11 +251,31 @@ public class HomeController {
 
         StudentsReport.generate(
                 tableStudents.getScene().getWindow(),
-                studentsList
+                new ArrayList<>(tableStudents.getItems())
         );
 
     }
 
+    @FXML
+    private void handleExportStudentsCsv() {
+        CsvExporter.exportStudents(tableStudents.getScene().getWindow(), new ArrayList<>(tableStudents.getItems()));
+    }
+
+    @FXML
+    private void handleExportPaymentsCsv() {
+        try {
+            List<PaymentReportRow> rows = paymentRepository.findReportRowsForUser(Session.getUserId());
+            CsvExporter.exportPayments(tableStudents.getScene().getWindow(), rows);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Export failed");
+            alert.setHeaderText(null);
+            alert.setContentText("Could not load payment data for export.");
+            I18n.localize(alert);
+            alert.showAndWait();
+        }
+    }
     @FXML
     private void handleExportPaymentsReport() {
 
@@ -473,7 +305,13 @@ public class HomeController {
             Stage stage =
                     (Stage) tableStudents.getScene().getWindow();
 
-            stage.setScene(new Scene(loader.load()));
+            stage.setMaximized(false);
+            stage.setResizable(false);
+            stage.setMinWidth(0);
+            stage.setMinHeight(0);
+            stage.setScene(new Scene(WindowChrome.wrap(stage, loader.load())));
+            stage.sizeToScene();
+            stage.centerOnScreen();
             stage.setTitle("Student Management System");
 
         } catch (Exception e) {
@@ -490,10 +328,11 @@ public class HomeController {
                     new FXMLLoader(getClass().getResource("/views/student_form.fxml"));
 
             Stage stage = new Stage();
+            stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
 
             stage.setTitle(student == null ? "Add Student" : "Edit Student");
 
-            stage.setScene(new Scene(loader.load()));
+            stage.setScene(new Scene(WindowChrome.wrap(stage, loader.load())));
 
             StudentFormController controller = loader.getController();
 
@@ -522,6 +361,7 @@ public class HomeController {
             alert.setTitle("Warning");
             alert.setHeaderText(null);
             alert.setContentText("Please select a student first.");
+            I18n.localize(alert);
             alert.showAndWait();
 
             return;
@@ -533,10 +373,11 @@ public class HomeController {
                     getClass().getResource("/views/payment_history.fxml"));
 
             Stage stage = new Stage();
+            stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
 
             stage.setTitle("Payment History");
 
-            stage.setScene(new Scene(loader.load()));
+            stage.setScene(new Scene(WindowChrome.wrap(stage, loader.load())));
 
             PaymentHistoryController controller = loader.getController();
 
@@ -553,6 +394,11 @@ public class HomeController {
 
         }
 
+    }
+
+    @FXML
+    private void handleAttendance() {
+        AttendanceController.open(tableStudents.getScene().getWindow());
     }
 
 }

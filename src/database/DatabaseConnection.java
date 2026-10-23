@@ -3,22 +3,26 @@ package database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Map;
 
 public class DatabaseConnection {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/student_management";
-    private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/student_management";
 
-    public static Connection getConnection() {
+    public static Connection getConnection() throws SQLException {
 
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection(URL, USER, PASSWORD);
+        Map<String, String> env = System.getenv();
+        String url = env.getOrDefault("DB_URL", DEFAULT_URL);
+        String user = env.get("DB_USER");
+        String password = env.get("DB_PASSWORD");
 
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-            return null;
+        if (user == null || password == null) {
+            throw new IllegalStateException(
+                    "Database configuration is missing. Set DB_USER and DB_PASSWORD " +
+                            "environment variables (DB_URL is optional)."
+            );
         }
+
+        return DriverManager.getConnection(url, user, password);
     }
 }

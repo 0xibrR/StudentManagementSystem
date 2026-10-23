@@ -1,186 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/23.0.1"
-            xmlns:fx="http://javafx.com/fxml"
+<BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.PaymentHistoryController"
-            prefWidth="950"
-            prefHeight="600">
-
+            prefWidth="1050" prefHeight="700"
+            styleClass="app-root" stylesheets="@../css/style.css">
     <top>
-
-        <VBox spacing="10"
-              BorderPane.alignment="CENTER">
-
-            <padding>
-                <Insets top="15" right="15" bottom="10" left="15"/>
-            </padding>
-
-            <Label text="Payment History"
-                   style="-fx-font-size:24px;
-                          -fx-font-weight:bold;"/>
-
-            <HBox spacing="20"
-                  alignment="CENTER_LEFT">
-
-                <Label text="👤 Student:"
-                       style="-fx-font-weight:bold;
-                  -fx-font-size:15px;"/>
-
-                <Label fx:id="lblStudent"
-                       style="-fx-font-size:15px;"/>
-
-                <Label text="📞 Phone:"
-                       style="-fx-font-weight:bold;
-                  -fx-font-size:15px;"/>
-
-                <Label fx:id="lblPhone"
-                       style="-fx-font-size:15px;"/>
-
-                <Label text="📅 Registration:"
-                       style="-fx-font-weight:bold;
-                  -fx-font-size:15px;"/>
-
-                <Label fx:id="lblRegistrationDate"
-                       style="-fx-font-size:15px;"/>
-
+        <VBox spacing="12" styleClass="page-header">
+            <Label text="Payment history" styleClass="page-title"/>
+            <HBox spacing="24" alignment="CENTER_LEFT">
+                <VBox spacing="3"><Label text="Student" styleClass="metric-label"/><Label fx:id="lblStudent" styleClass="section-title"/></VBox>
+                <VBox spacing="3"><Label text="Phone" styleClass="metric-label"/><Label fx:id="lblPhone"/></VBox>
+                <VBox spacing="3"><Label text="Registration date" styleClass="metric-label"/><Label fx:id="lblRegistrationDate"/></VBox>
             </HBox>
-
         </VBox>
-
     </top>
-
     <center>
-
-        <VBox spacing="12" style="-fx-padding: 0 15 15 15;">
-
-            <HBox spacing="15" alignment="CENTER">
-
-
-                <VBox alignment="CENTER" spacing="5" prefWidth="150"
-                      style="-fx-background-color:#4CAF50; -fx-background-radius:10; -fx-padding:10;">
-                    <Label text="Payments" style="-fx-text-fill:white; -fx-font-weight:bold;"/>
-                    <Label fx:id="lblPaymentsCount" text="0"
-                           style="-fx-text-fill:white; -fx-font-size:24px; -fx-font-weight:bold;"/>
-                </VBox>
-
-
-                <VBox alignment="CENTER" spacing="5" prefWidth="150"
-                      style="-fx-background-color:#2196F3; -fx-background-radius:10; -fx-padding:10;">
-                    <Label text="Cash" style="-fx-text-fill:white; -fx-font-weight:bold;"/>
-                    <Label fx:id="lblCashTotal" text="0.00 ₪"
-                           style="-fx-text-fill:white; -fx-font-size:20px; -fx-font-weight:bold;"/>
-                </VBox>
-
-
-                <VBox alignment="CENTER" spacing="5" prefWidth="150"
-                      style="-fx-background-color:#9C27B0; -fx-background-radius:10; -fx-padding:10;">
-                    <Label text="Bank" style="-fx-text-fill:white; -fx-font-weight:bold;"/>
-                    <Label fx:id="lblBankTotal" text="0.00 ₪"
-                           style="-fx-text-fill:white; -fx-font-size:20px; -fx-font-weight:bold;"/>
-                </VBox>
-
-
-                <VBox alignment="CENTER" spacing="5" prefWidth="150"
-                      style="-fx-background-color:#009688; -fx-background-radius:10; -fx-padding:10;">
-                    <Label text="Total Paid" style="-fx-text-fill:white; -fx-font-weight:bold;"/>
-                    <Label fx:id="lblTotalPaid" text="0.00 ₪"
-                           style="-fx-text-fill:white; -fx-font-size:20px; -fx-font-weight:bold;"/>
-                </VBox>
-
-
-                <VBox fx:id="remainingCard" alignment="CENTER" spacing="5" prefWidth="150"
-                      style="-fx-background-color:#FF9800;
-             -fx-background-radius:10;
-             -fx-padding:10;">
-
-                    <Label text="Remaining"
-                           style="-fx-text-fill:white;
-                  -fx-font-weight:bold;"/>
-
-                    <Label fx:id="lblRemainingTotal"
-                           text="0.00 ₪"
-                           style="-fx-text-fill:white;
-                  -fx-font-size:20px;
-                  -fx-font-weight:bold;"/>
-
-                </VBox>
-
+        <VBox spacing="14" styleClass="content-area">
+            <Label text="Totals include all payment records; filters apply to the table and CSV export." styleClass="page-subtitle"/>
+            <HBox spacing="12" styleClass="dashboard-cards">
+                <VBox alignment="CENTER_LEFT" spacing="5" styleClass="metric-card" HBox.hgrow="ALWAYS"><Label text="Payments" styleClass="metric-label"/><Label fx:id="lblPaymentsCount" text="0" styleClass="metric-value"/></VBox>
+                <VBox alignment="CENTER_LEFT" spacing="5" styleClass="metric-card" HBox.hgrow="ALWAYS"><Label text="Cash" styleClass="metric-label"/><Label fx:id="lblCashTotal" text="0.00 ₪" styleClass="metric-value"/></VBox>
+                <VBox alignment="CENTER_LEFT" spacing="5" styleClass="metric-card" HBox.hgrow="ALWAYS"><Label text="Bank" styleClass="metric-label"/><Label fx:id="lblBankTotal" text="0.00 ₪" styleClass="metric-value"/></VBox>
+                <VBox alignment="CENTER_LEFT" spacing="5" styleClass="metric-card" HBox.hgrow="ALWAYS"><Label text="Total paid" styleClass="metric-label"/><Label fx:id="lblTotalPaid" text="0.00 ₪" styleClass="metric-value"/></VBox>
+                <VBox fx:id="remainingCard" alignment="CENTER_LEFT" spacing="5" styleClass="metric-card" HBox.hgrow="ALWAYS"><Label text="Remaining" styleClass="metric-label"/><Label fx:id="lblRemainingTotal" text="0.00 ₪" styleClass="metric-value"/></VBox>
             </HBox>
-
-            <TableView fx:id="tablePayments">
-
+            <HBox spacing="8" alignment="CENTER_LEFT" styleClass="search-bar">
+                <TextField fx:id="txtPaymentSearch" promptText="Search notes, method, date, or amount..." prefWidth="300" HBox.hgrow="ALWAYS"/>
+                <ComboBox fx:id="cmbPaymentMethod" prefWidth="135"/>
+                <DatePicker fx:id="dpFrom" promptText="From date" prefWidth="145"/>
+                <DatePicker fx:id="dpTo" promptText="To date" prefWidth="145"/>
+                <Button text="Clear" onAction="#handleClearFilters"/>
+                <Label fx:id="lblPaymentResults" styleClass="page-subtitle"/>
+            </HBox>
+            <TableView fx:id="tablePayments" VBox.vgrow="ALWAYS">
                 <columns>
-
-                    <TableColumn fx:id="colDate"
-                                 text="Date"
-                                 prefWidth="120"/>
-
-                    <TableColumn fx:id="colMethod"
-                                 text="Method"
-                                 prefWidth="100"/>
-
-                    <TableColumn fx:id="colAmountDue"
-                                 text="Amount Due"
-                                 prefWidth="120"/>
-
-                    <TableColumn fx:id="colCash"
-                                 text="Cash"
-                                 prefWidth="100"/>
-
-                    <TableColumn fx:id="colBank"
-                                 text="Bank"
-                                 prefWidth="100"/>
-
-                    <TableColumn fx:id="colPaid"
-                                 text="Paid"
-                                 prefWidth="100"/>
-
-                    <TableColumn fx:id="colRemaining"
-                                 text="Remaining"
-                                 prefWidth="110"/>
-
-                    <TableColumn fx:id="colNotes"
-                                 text="Notes"
-                                 prefWidth="250"/>
-
+                    <TableColumn fx:id="colDate" text="Date" prefWidth="120"/>
+                    <TableColumn fx:id="colMethod" text="Method" prefWidth="110"/>
+                    <TableColumn fx:id="colAmountDue" text="Amount due" prefWidth="125"/>
+                    <TableColumn fx:id="colCash" text="Cash" prefWidth="100"/>
+                    <TableColumn fx:id="colBank" text="Bank" prefWidth="100"/>
+                    <TableColumn fx:id="colPaid" text="Paid" prefWidth="100"/>
+                    <TableColumn fx:id="colRemaining" text="Remaining" prefWidth="110"/>
+                    <TableColumn fx:id="colNotes" text="Notes" prefWidth="260"/>
                 </columns>
-
             </TableView>
-
         </VBox>
-
     </center>
-
     <bottom>
-
-        <HBox spacing="15"
-              alignment="CENTER">
-
-            <padding>
-                <Insets top="15" right="15" bottom="15" left="15"/>
-            </padding>
-
-            <Button text="➕ Add Payment"
-                    onAction="#handleAddPayment"/>
-
-            <Button text="✏ Edit"
-                    onAction="#handleEdit"/>
-
-            <Button text="🗑 Delete"
-                    onAction="#handleDelete"/>
-
-            <Button text="Student Payment Report"
-                    onAction="#handleExportStudentReport"/>
-
-            <Button text="❌ Close"
-                    onAction="#handleClose"/>
-
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="action-bar">
+            <Button text="Add payment" styleClass="primary-button" onAction="#handleAddPayment"/>
+            <Button text="Edit" onAction="#handleEdit"/>
+            <Button text="Delete" styleClass="danger-button" onAction="#handleDelete"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Student payment report" onAction="#handleExportStudentReport"/>
+            <Button text="Export CSV" onAction="#handleExportStudentCsv"/>
+            <Button text="Close" onAction="#handleClose"/>
         </HBox>
-
     </bottom>
-
 </BorderPane>

@@ -1,6 +1,9 @@
 package controllers;
 
-import database.DatabaseConnection;
+import ui.WindowChrome;
+import ui.I18n;
+
+import database.UserRepository;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -9,13 +12,13 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import models.Session;
+import models.User;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 public class LoginController {
+
+    private final UserRepository userRepository = new UserRepository();
 
     @FXML
     private TextField txtUsername;
@@ -27,43 +30,33 @@ public class LoginController {
     private void handleLogin() {
 
         String username = txtUsername.getText().trim();
-        String password = txtPassword.getText().trim();
+        String password = txtPassword.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
             showError("Error", "Please enter username and password.");
             return;
         }
 
-        String sql = "SELECT id, full_name FROM users WHERE username=? AND password=?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, username);
-            stmt.setString(2, password);
-
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-
-                Session.setUserId(rs.getInt("id"));
-                Session.setFullName(rs.getString("full_name"));
-
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/home.fxml"));
-
-                Stage stage = (Stage) txtUsername.getScene().getWindow();
-                stage.setScene(new Scene(loader.load()));
-                stage.setTitle("Student Management System");
-
-            } else {
-
+        try {
+            User user = userRepository.authenticate(username, password);
+            if (user == null) {
                 showError("Login Failed", "Invalid username or password.");
-
+                return;
             }
 
+            Session.signIn(user);
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/home.fxml"));
+            Stage stage = (Stage) txtUsername.getScene().getWindow();
+            stage.setResizable(true);
+            stage.setMinWidth(1000);
+            stage.setMinHeight(650);
+            stage.setScene(new Scene(WindowChrome.wrap(stage, loader.load())));
+            stage.setTitle("Student Management System");
+            stage.setMaximized(true);
         } catch (Exception e) {
             e.printStackTrace();
-            showError("Database Error", e.getMessage());
+            showError("Database Error", "Could not connect to the database. Check your database configuration.");
         }
     }
 
@@ -76,7 +69,13 @@ public class LoginController {
 
             Stage stage = (Stage) txtUsername.getScene().getWindow();
 
-            stage.setScene(new Scene(loader.load()));
+            stage.setScene(new Scene(WindowChrome.wrap(stage, loader.load())));
+            stage.setMaximized(false);
+            stage.setResizable(false);
+            stage.setMinWidth(0);
+            stage.setMinHeight(0);
+            stage.sizeToScene();
+            stage.centerOnScreen();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -91,6 +90,7 @@ public class LoginController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+        I18n.localize(alert);
 
         alert.showAndWait();
 

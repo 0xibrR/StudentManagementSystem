@@ -7,11 +7,8 @@ public class CreateTable {
 
     public static void createTables() {
 
-        try {
-
-            Connection con = DatabaseConnection.getConnection();
-
-            Statement st = con.createStatement();
+        try (Connection con = DatabaseConnection.getConnection();
+             Statement st = con.createStatement()) {
 
             // ==========================
             // Users Table
@@ -58,9 +55,9 @@ public class CreateTable {
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     student_id INT NOT NULL,
                     payment_method VARCHAR(20) NOT NULL,
-                    cash_amount DOUBLE NOT NULL,
-                    bank_amount DOUBLE NOT NULL,
-                    total_amount DOUBLE NOT NULL,
+                    cash_amount DECIMAL(12,2) NOT NULL,
+                    bank_amount DECIMAL(12,2) NOT NULL,
+                    total_amount DECIMAL(12,2) NOT NULL,
                     payment_date DATE NOT NULL,
                     notes TEXT,
 
@@ -77,10 +74,64 @@ public class CreateTable {
             st.execute(studentsTable);
             st.execute(paymentsTable);
 
-            System.out.println("Tables created successfully.");
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS student_schedules (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    student_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    effective_from DATE NOT NULL,
+                    effective_to DATE NULL,
+                    created_by INT NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_schedule_student_period (student_id, effective_from, effective_to),
+                    CONSTRAINT fk_schedule_student FOREIGN KEY (student_id)
+                        REFERENCES students(id) ON DELETE CASCADE,
+                    CONSTRAINT fk_schedule_user FOREIGN KEY (user_id)
+                        REFERENCES users(id) ON DELETE CASCADE,
+                    CONSTRAINT fk_schedule_creator FOREIGN KEY (created_by)
+                        REFERENCES users(id)
+                )
+                """);
 
-            st.close();
-            con.close();
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS student_schedule_days (
+                    schedule_id INT NOT NULL,
+                    day_of_week TINYINT NOT NULL,
+                    PRIMARY KEY (schedule_id, day_of_week),
+                    CONSTRAINT chk_schedule_day CHECK (day_of_week BETWEEN 1 AND 7),
+                    CONSTRAINT fk_schedule_day_schedule FOREIGN KEY (schedule_id)
+                        REFERENCES student_schedules(id) ON DELETE CASCADE
+                )
+                """);
+
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS attendance (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    student_id INT NOT NULL,
+                    user_id INT NOT NULL,
+                    attendance_date DATE NOT NULL,
+                    status VARCHAR(20) NOT NULL,
+                    notes VARCHAR(500),
+                    marked_by INT NOT NULL,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    UNIQUE KEY uq_attendance_student_date (student_id, attendance_date),
+                    INDEX idx_attendance_user_date (user_id, attendance_date),
+                    CONSTRAINT chk_attendance_status CHECK (status IN ('PRESENT','ABSENT','LATE','EXCUSED')),
+                    CONSTRAINT fk_attendance_student FOREIGN KEY (student_id)
+                        REFERENCES students(id) ON DELETE CASCADE,
+                    CONSTRAINT fk_attendance_user FOREIGN KEY (user_id)
+                        REFERENCES users(id) ON DELETE CASCADE,
+                    CONSTRAINT fk_attendance_marker FOREIGN KEY (marked_by)
+                        REFERENCES users(id)
+                )
+                """);
+
+            // Migrate existing DOUBLE columns to exact two-decimal money values.
+            st.execute("ALTER TABLE payments MODIFY cash_amount DECIMAL(12,2) NOT NULL");
+            st.execute("ALTER TABLE payments MODIFY bank_amount DECIMAL(12,2) NOT NULL");
+            st.execute("ALTER TABLE payments MODIFY total_amount DECIMAL(12,2) NOT NULL");
+
+            System.out.println("Tables created successfully.");
 
         } catch (Exception e) {
 

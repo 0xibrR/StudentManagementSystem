@@ -1,8 +1,13 @@
 package controllers;
 
-import database.DatabaseConnection;
+import ui.WindowChrome;
+import ui.I18n;
+
+import database.PaymentRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -11,17 +16,32 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import models.Payment;
+import models.PaymentSummary;
+import models.Session;
 import models.Student;
 import reports.StudentPaymentReport;
+import reports.CsvExporter;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.List;
 
 public class PaymentHistoryController {
 
     @FXML
     private TableView<Payment> tablePayments;
+    @FXML
+    private TextField txtPaymentSearch;
+    @FXML
+    private ComboBox<String> cmbPaymentMethod;
+    @FXML
+    private DatePicker dpFrom;
+    @FXML
+    private DatePicker dpTo;
+    @FXML
+    private Label lblPaymentResults;
 
     @FXML
     private TableColumn<Payment, java.sql.Date> colDate;
@@ -30,19 +50,19 @@ public class PaymentHistoryController {
     private TableColumn<Payment, String> colMethod;
 
     @FXML
-    private TableColumn<Payment, Double> colAmountDue;
+    private TableColumn<Payment, BigDecimal> colAmountDue;
 
     @FXML
-    private TableColumn<Payment, Double> colCash;
+    private TableColumn<Payment, BigDecimal> colCash;
 
     @FXML
-    private TableColumn<Payment, Double> colBank;
+    private TableColumn<Payment, BigDecimal> colBank;
 
     @FXML
-    private TableColumn<Payment, Double> colPaid;
+    private TableColumn<Payment, BigDecimal> colPaid;
 
     @FXML
-    private TableColumn<Payment, Double> colRemaining;
+    private TableColumn<Payment, BigDecimal> colRemaining;
 
     @FXML
     private TableColumn<Payment, String> colNotes;
@@ -76,7 +96,10 @@ public class PaymentHistoryController {
 
     private Student student;
 
-    private ObservableList<Payment> paymentList;
+    private final ObservableList<Payment> allPayments = FXCollections.observableArrayList();
+    private FilteredList<Payment> filteredPayments;
+    private SortedList<Payment> sortedPayments;
+    private final PaymentRepository paymentRepository = new PaymentRepository();
 
     @FXML
     public void initialize() {
@@ -90,6 +113,18 @@ public class PaymentHistoryController {
         colRemaining.setCellValueFactory(new PropertyValueFactory<>("remaining"));
         colNotes.setCellValueFactory(new PropertyValueFactory<>("notes"));
 
+        filteredPayments = new FilteredList<>(allPayments, payment -> true);
+        sortedPayments = new SortedList<>(filteredPayments);
+        sortedPayments.comparatorProperty().bind(tablePayments.comparatorProperty());
+        tablePayments.setItems(sortedPayments);
+        cmbPaymentMethod.getItems().setAll(I18n.text("All methods"), I18n.paymentMethod("Cash"),
+                I18n.paymentMethod("Bank"), I18n.paymentMethod("Mixed"));
+        cmbPaymentMethod.setValue(I18n.text("All methods"));
+        txtPaymentSearch.textProperty().addListener((observable, oldValue, newValue) -> applyPaymentFilters());
+        cmbPaymentMethod.valueProperty().addListener((observable, oldValue, newValue) -> applyPaymentFilters());
+        dpFrom.valueProperty().addListener((observable, oldValue, newValue) -> applyPaymentFilters());
+        dpTo.valueProperty().addListener((observable, oldValue, newValue) -> applyPaymentFilters());
+
     }
 
     public void setStudent(Student student) {
@@ -98,7 +133,8 @@ public class PaymentHistoryController {
 
         lblStudent.setText(student.getName());
         lblPhone.setText(student.getPhone());
-        lblRegistrationDate.setText(student.getEnrollmentDate().toString());
+        lblRegistrationDate.setText(student.getEnrollmentDate() == null
+                ? "" : student.getEnrollmentDate().toString());
 
         loadPayments();
         loadStatistics();
@@ -107,67 +143,17 @@ public class PaymentHistoryController {
 
     private void loadStatistics() {
 
-        String sql = """
-                SELECT
-                    COUNT(*) AS payments_count,
-                    IFNULL(SUM(cash_amount),0) AS cash_total,
-                    IFNULL(SUM(bank_amount),0) AS bank_total,
-                    IFNULL(SUM(cash_amount + bank_amount),0) AS paid_total,
-                    IFNULL(SUM(total_amount - (cash_amount + bank_amount)),0) AS remaining_total
-                FROM payments
-                WHERE student_id = ?
-                """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, student.getId());
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-
-                lblPaymentsCount.setText(
-                        String.valueOf(rs.getInt("payments_count"))
-                );
-
-                lblCashTotal.setText(
-                        String.format("%.2f ₪", rs.getDouble("cash_total"))
-                );
-
-                lblBankTotal.setText(
-                        String.format("%.2f ₪", rs.getDouble("bank_total"))
-                );
-
-                lblTotalPaid.setText(
-                        String.format("%.2f ₪", rs.getDouble("paid_total"))
-                );
-
-                double remaining = rs.getDouble("remaining_total");
-
-                lblRemainingTotal.setText(
-                        String.format("%.2f ₪", remaining)
-                );
-
-                if (remaining <= 0) {
-
-                    remainingCard.setStyle("""
-                                -fx-background-color:#4CAF50;
-                                -fx-background-radius:10;
-                                -fx-padding:10;
-                            """);
-
-                } else {
-
-                    remainingCard.setStyle("""
-                                -fx-background-color:#F57C00;
-                                -fx-background-radius:10;
-                                -fx-padding:10;
-                            """);
-
-                }
-
-            }
+        try {
+            PaymentSummary summary = paymentRepository.getSummary(student.getId(), Session.getUserId());
+            lblPaymentsCount.setText(String.valueOf(summary.getCount()));
+            lblCashTotal.setText(String.format("%.2f ₪", summary.getCash()));
+            lblBankTotal.setText(String.format("%.2f ₪", summary.getBank()));
+            lblTotalPaid.setText(String.format("%.2f ₪", summary.getPaid()));
+            BigDecimal remaining = summary.getRemaining();
+            lblRemainingTotal.setText(String.format("%.2f ₪", remaining));
+            remainingCard.setStyle(remaining.compareTo(BigDecimal.ZERO) <= 0
+                    ? "-fx-border-color:#22a06b; -fx-border-radius:12;"
+                    : "-fx-border-color:#e79218; -fx-border-radius:12;");
 
         } catch (Exception e) {
 
@@ -179,47 +165,55 @@ public class PaymentHistoryController {
 
     private void loadPayments() {
 
-        paymentList = FXCollections.observableArrayList();
-
-        String sql = """
-                SELECT *
-                FROM payments
-                WHERE student_id = ?
-                ORDER BY payment_date DESC
-                """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, student.getId());
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-
-                paymentList.add(new Payment(
-
-                        rs.getInt("id"),
-                        rs.getInt("student_id"),
-                        rs.getString("payment_method"),
-                        rs.getDouble("cash_amount"),
-                        rs.getDouble("bank_amount"),
-                        rs.getDouble("total_amount"),
-                        rs.getDate("payment_date"),
-                        rs.getString("notes")
-
-                ));
-
-            }
-
-            tablePayments.setItems(paymentList);
-
+        try {
+            allPayments.setAll(paymentRepository.findByStudent(student.getId(), Session.getUserId()));
+            applyPaymentFilters();
         } catch (Exception e) {
-
             e.printStackTrace();
-
         }
+    }
 
+    private void applyPaymentFilters() {
+        if (filteredPayments == null) return;
+        String query = txtPaymentSearch.getText() == null
+                ? "" : txtPaymentSearch.getText().trim().toLowerCase(Locale.ROOT);
+        String method = cmbPaymentMethod.getValue();
+        LocalDate from = dpFrom.getValue();
+        LocalDate to = dpTo.getValue();
+        filteredPayments.setPredicate(payment -> {
+            if (method != null && !method.equals(I18n.text("All methods"))
+                    && !matchesMethod(I18n.canonicalPaymentMethod(method), payment.getPaymentMethod())) return false;
+            LocalDate date = payment.getPaymentDate() == null ? null : payment.getPaymentDate().toLocalDate();
+            if (from != null && (date == null || date.isBefore(from))) return false;
+            if (to != null && (date == null || date.isAfter(to))) return false;
+            if (from != null && to != null && from.isAfter(to)) return false;
+            if (query.isEmpty()) return true;
+            String searchable = (safe(payment.getPaymentMethod()) + " " + safe(payment.getNotes()) + " "
+                    + safe(payment.getPaymentDate()) + " " + safe(payment.getTotalAmount()) + " "
+                    + safe(payment.getCashAmount()) + " " + safe(payment.getBankAmount()) + " "
+                    + safe(payment.getPaid()) + " " + safe(payment.getRemaining())).toLowerCase(Locale.ROOT);
+            return searchable.contains(query);
+        });
+        I18n.setText(lblPaymentResults, filteredPayments.size() + " of " + allPayments.size() + " payments");
+    }
+
+    private boolean matchesMethod(String selectedMethod, String paymentMethod) {
+        if (paymentMethod == null) return false;
+        if (selectedMethod.equals("Mixed")) {
+            return paymentMethod.equalsIgnoreCase("Mixed") || paymentMethod.equalsIgnoreCase("Cash + Bank");
+        }
+        return selectedMethod.equalsIgnoreCase(paymentMethod);
+    }
+    private String safe(Object value) {
+        return value == null ? "" : value.toString();
+    }
+
+    @FXML
+    private void handleClearFilters() {
+        txtPaymentSearch.clear();
+        cmbPaymentMethod.setValue(I18n.text("All methods"));
+        dpFrom.setValue(null);
+        dpTo.setValue(null);
     }
 
     @FXML
@@ -231,10 +225,11 @@ public class PaymentHistoryController {
                     getClass().getResource("/views/payment_form.fxml"));
 
             Stage stage = new Stage();
+            stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
 
             stage.setTitle("Add Payment");
 
-            stage.setScene(new Scene(loader.load()));
+            stage.setScene(new Scene(WindowChrome.wrap(stage, loader.load())));
 
             PaymentController controller = loader.getController();
 
@@ -264,6 +259,7 @@ public class PaymentHistoryController {
             alert.setTitle("Warning");
             alert.setHeaderText(null);
             alert.setContentText("Please select a payment first.");
+            I18n.localize(alert);
             alert.showAndWait();
 
             return;
@@ -275,10 +271,11 @@ public class PaymentHistoryController {
                     getClass().getResource("/views/payment_form.fxml"));
 
             Stage stage = new Stage();
+            stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
 
             stage.setTitle("Edit Payment");
 
-            stage.setScene(new Scene(loader.load()));
+            stage.setScene(new Scene(WindowChrome.wrap(stage, loader.load())));
 
             PaymentController controller = loader.getController();
 
@@ -310,6 +307,7 @@ public class PaymentHistoryController {
             alert.setTitle("Warning");
             alert.setHeaderText(null);
             alert.setContentText("Please select a payment first.");
+            I18n.localize(alert);
             alert.showAndWait();
 
             return;
@@ -320,24 +318,22 @@ public class PaymentHistoryController {
         confirm.setTitle("Delete Payment");
         confirm.setHeaderText(null);
         confirm.setContentText("Are you sure you want to delete this payment?");
+        I18n.localize(confirm);
 
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
             return;
         }
 
-        String sql = """
-            DELETE FROM payments
-            WHERE id = ?
-            AND student_id = ?
-            """;
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, selectedPayment.getId());
-            ps.setInt(2, student.getId());
-
-            ps.executeUpdate();
+        try {
+            if (!paymentRepository.delete(selectedPayment.getId(), student.getId(), Session.getUserId())) {
+                Alert error = new Alert(Alert.AlertType.ERROR);
+                error.setTitle("Not Found");
+                error.setHeaderText(null);
+                error.setContentText("The payment record is no longer available.");
+                I18n.localize(error);
+                error.showAndWait();
+                return;
+            }
 
             loadPayments();
             loadStatistics();
@@ -346,6 +342,7 @@ public class PaymentHistoryController {
             success.setTitle("Success");
             success.setHeaderText(null);
             success.setContentText("Payment deleted successfully.");
+            I18n.localize(success);
             success.showAndWait();
 
         } catch (Exception e) {
@@ -356,6 +353,7 @@ public class PaymentHistoryController {
             error.setTitle("Database Error");
             error.setHeaderText(null);
             error.setContentText(e.getMessage());
+            I18n.localize(error);
             error.showAndWait();
 
         }
@@ -370,6 +368,12 @@ public class PaymentHistoryController {
                 student
         );
 
+    }
+
+    @FXML
+    private void handleExportStudentCsv() {
+        CsvExporter.exportStudentPayments(tablePayments.getScene().getWindow(), student,
+                new ArrayList<>(tablePayments.getItems()));
     }
 
     @FXML

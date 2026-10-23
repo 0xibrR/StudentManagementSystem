@@ -3,21 +3,22 @@ package reports;
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
 import com.lowagie.text.pdf.*;
-import database.DatabaseConnection;
+import database.PaymentRepository;
 import javafx.scene.control.Alert;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import models.Session;
+import models.PaymentReportRow;
+import ui.I18n;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Locale;
 
 public class PaymentsReport {
@@ -26,40 +27,15 @@ public class PaymentsReport {
     // Fonts
     // ==========================================
 
-    private static final Font TITLE_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA_BOLD,
-                    22,
-                    Color.BLUE
-            );
+    private static final Font TITLE_FONT = PdfFonts.title(Color.BLUE);
 
-    private static final Font SUBTITLE_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA_BOLD,
-                    16,
-                    Color.DARK_GRAY
-            );
+    private static final Font SUBTITLE_FONT = PdfFonts.subtitle(Color.DARK_GRAY);
 
-    private static final Font HEADER_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA_BOLD,
-                    12,
-                    Color.WHITE
-            );
+    private static final Font HEADER_FONT = PdfFonts.header(Color.WHITE);
 
-    private static final Font NORMAL_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA,
-                    11,
-                    Color.BLACK
-            );
+    private static final Font NORMAL_FONT = PdfFonts.normal(Color.BLACK);
 
-    private static final Font FOOTER_FONT =
-            FontFactory.getFont(
-                    FontFactory.HELVETICA_OBLIQUE,
-                    10,
-                    Color.GRAY
-            );
+    private static final Font FOOTER_FONT = PdfFonts.footer(Color.GRAY);
 
     // ==========================================
     // Colors
@@ -85,11 +61,11 @@ public class PaymentsReport {
 
         FileChooser chooser = new FileChooser();
 
-        chooser.setTitle("Save PDF Report");
+        chooser.setTitle(I18n.text("Save PDF Report"));
 
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter(
-                        "PDF Files",
+                        I18n.text("PDF Files"),
                         "*.pdf"
                 )
         );
@@ -106,9 +82,13 @@ public class PaymentsReport {
 
     private static PdfPCell createHeaderCell(String text) {
 
+        text = I18n.text(text);
+
         PdfPCell cell = new PdfPCell(
                 new Phrase(text, HEADER_FONT)
         );
+
+        PdfFonts.enableRtl(cell, text);
 
         cell.setBackgroundColor(HEADER_COLOR);
 
@@ -131,12 +111,16 @@ public class PaymentsReport {
             Color background
     ) {
 
+        text = I18n.text(text);
+
         PdfPCell cell = new PdfPCell(
                 new Phrase(
                         text == null ? "" : text,
                         NORMAL_FONT
                 )
         );
+
+        PdfFonts.enableRtl(cell, text);
 
         cell.setBackgroundColor(background);
 
@@ -185,7 +169,7 @@ public class PaymentsReport {
 
         File file = chooseSaveLocation(
                 owner,
-                "Payments_Report.pdf"
+                ReportFileNames.create("Payments_Report", null, "pdf")
         );
 
         if (file == null) {
@@ -260,43 +244,22 @@ public class PaymentsReport {
             // Load Payments
             // ==========================================
 
-            String sql = """
-                    SELECT
-                        p.payment_date,
-                        s.name,
-                        p.payment_method,
-                        p.cash_amount,
-                        p.bank_amount,
-                        p.total_amount,
-                        (p.total_amount - (p.cash_amount + p.bank_amount)) AS remaining
-                    FROM payments p
-                    JOIN students s
-                        ON p.student_id = s.id
-                    WHERE s.user_id = ?
-                    ORDER BY p.payment_date DESC
-                    """;
-
-            Connection conn = DatabaseConnection.getConnection();
-
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setInt(1, Session.getUserId());
-
-            ResultSet rs = ps.executeQuery();
+            List<PaymentReportRow> rows = new PaymentRepository()
+                    .findReportRowsForUser(Session.getUserId());
 
             // ==========================================
             // Summary
             // ==========================================
 
-            int totalPayments = 0;
+            int totalPayments = rows.size();
 
-            double cashIncome = 0;
+            BigDecimal cashIncome = BigDecimal.ZERO;
 
-            double bankIncome = 0;
+            BigDecimal bankIncome = BigDecimal.ZERO;
 
-            double totalIncome = 0;
+            BigDecimal totalIncome = BigDecimal.ZERO;
 
-            double remainingIncome = 0;
+            BigDecimal remainingIncome = BigDecimal.ZERO;
 
             // ==========================================
             // Payments Table
@@ -337,37 +300,35 @@ public class PaymentsReport {
 
             boolean even = false;
 
-            while (rs.next()) {
+            for (PaymentReportRow row : rows) {
 
                 Color background = even ? ROW_COLOR : WHITE_COLOR;
 
-                double cash = rs.getDouble("cash_amount");
-                double bank = rs.getDouble("bank_amount");
-                double total = rs.getDouble("total_amount");
-                double remaining = rs.getDouble("remaining");
+                BigDecimal cash = row.getCash();
+                BigDecimal bank = row.getBank();
+                BigDecimal total = row.getTotal();
+                BigDecimal remaining = row.getRemaining();
 
-                totalPayments++;
+                cashIncome = cashIncome.add(cash);
 
-                cashIncome += cash;
+                bankIncome = bankIncome.add(bank);
 
-                bankIncome += bank;
+                totalIncome = totalIncome.add(cash).add(bank);
 
-                totalIncome += (cash + bank);
-
-                remainingIncome += remaining;
+                remainingIncome = remainingIncome.add(remaining);
 
                 table.addCell(createCell(
-                        rs.getDate("payment_date").toString(),
+                        row.getPaymentDate().toString(),
                         background
                 ));
 
                 table.addCell(createCell(
-                        rs.getString("name"),
+                        row.getStudentName(),
                         background
                 ));
 
                 table.addCell(createCell(
-                        rs.getString("payment_method"),
+                        row.getPaymentMethod(),
                         background
                 ));
 
@@ -459,14 +420,6 @@ public class PaymentsReport {
             document.add(footer);
 
             // ==========================================
-            // Close Resources
-            // ==========================================
-
-            rs.close();
-            ps.close();
-            conn.close();
-
-            // ==========================================
             // Finish PDF
             // ==========================================
 
@@ -481,6 +434,7 @@ public class PaymentsReport {
             alert.setTitle("Success");
             alert.setHeaderText(null);
             alert.setContentText("Payments report created successfully.");
+            I18n.localize(alert);
 
             alert.showAndWait();
 
@@ -493,6 +447,7 @@ public class PaymentsReport {
             alert.setTitle("Error");
             alert.setHeaderText(null);
             alert.setContentText("Failed to create PDF report.");
+            I18n.localize(alert);
 
             alert.showAndWait();
 
